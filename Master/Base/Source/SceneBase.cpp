@@ -134,6 +134,17 @@ void SceneBase::Init()
 
 	meshList[GEO_TILESET1] = MeshBuilder::GenerateTileSet("GEO_TILESET3", 30, 30);
 	meshList[GEO_TILESET1]->textureID = LoadTGA("Image//tileSet3.tga");
+	meshList[GEO_CASTLE] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 1);
+	meshList[GEO_CASTLE]->textureID = LoadTGA("Image//Castle.tga");
+	meshList[GEO_DOOR] = MeshBuilder::Generate2DMesh("sprite", Color(1, 1, 1), 100, 100, 1, 1);
+	meshList[GEO_DOOR]->textureID = LoadTGA("Image//Door.tga");
+
+	SpriteAnimation *castle = dynamic_cast<SpriteAnimation*>(meshList[GEO_CASTLE]);
+	if (castle)
+	{
+		castle->m_anim = new Animation();
+		castle->m_anim->Set(0, 0, 1, 1, true);
+	}
 
 	Math::InitRNG();
 	camera.Init(Vector3(0, 0, 10), Vector3(0, 0, 0), Vector3(0, 1, 0));
@@ -186,8 +197,10 @@ void SceneBase::RenderTextOnScreen(Mesh* mesh, std::string text, Color color, fl
 {
 	if (!mesh || mesh->textureID <= 0)
 		return;
+
+	//	glDisable(GL_DEPTH_TEST);
 	Mtx44 ortho;
-	ortho.SetToOrtho(0, 800, 0, 600, -10, 100);
+	ortho.SetToOrtho(0, 800, 0, 600, -10, 10);
 	projectionStack.PushMatrix();
 	projectionStack.LoadMatrix(ortho);
 	viewStack.PushMatrix();
@@ -195,7 +208,7 @@ void SceneBase::RenderTextOnScreen(Mesh* mesh, std::string text, Color color, fl
 	modelStack.PushMatrix();
 	modelStack.LoadIdentity();
 	modelStack.Translate(x, y, 0);
-	modelStack.Scale(size, size, 1);
+	modelStack.Scale(size, size, size);
 	glUniform1i(m_parameters[U_TEXT_ENABLED], 1);
 	glUniform3fv(m_parameters[U_TEXT_COLOR], 1, &color.r);
 	glUniform1i(m_parameters[U_LIGHTENABLED], 0);
@@ -203,20 +216,10 @@ void SceneBase::RenderTextOnScreen(Mesh* mesh, std::string text, Color color, fl
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mesh->textureID);
 	glUniform1i(m_parameters[U_COLOR_TEXTURE], 0);
-	float pointer = 0.6f;
-	ytranslate = 0.2f;
 	for (unsigned i = 0; i < text.length(); ++i)
 	{
 		Mtx44 characterSpacing;
-		if (i > 0) {
-			pointer += FontData.charOffsets[text[Math::Min(i, i - 1)]] + 0.18f;
-			if (pointer >= 23.f) {
-				ytranslate -= 1.f;
-				pointer = 0.2f;
-			}
-		}
-		//pointer += FontData.charOffsets[text[Math::Min(i, i - 1)]] + 0.18f;
-		characterSpacing.SetToTranslation(pointer, ytranslate, 0); //1.0f is the spacing of each character, you may change this value
+		characterSpacing.SetToTranslation(i + 0.5f, 0.3f, 0); //1.0f is the spacing of each character, you may change this value
 		Mtx44 MVP = projectionStack.Top() * viewStack.Top() * modelStack.Top() * characterSpacing;
 		glUniformMatrix4fv(m_parameters[U_MVP], 1, GL_FALSE, &MVP.a[0]);
 
@@ -227,6 +230,7 @@ void SceneBase::RenderTextOnScreen(Mesh* mesh, std::string text, Color color, fl
 	modelStack.PopMatrix();
 	viewStack.PopMatrix();
 	projectionStack.PopMatrix();
+	//	glEnable(GL_DEPTH_TEST);
 }
 
 void SceneBase::Render2DMeshWScale(Mesh *mesh, const bool enableLight, const float sizeX, const float sizeY, const float x, const float y, const bool flip, const float offset)

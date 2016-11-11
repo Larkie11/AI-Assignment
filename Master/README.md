@@ -1,2 +1,2 @@
-# AI ASSIGNMENT 1
-GANBATTE
+# SP3GDP
+Game Development Project
