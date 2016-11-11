@@ -40,6 +40,9 @@ void Scene1::Init()
 	TempRandomInt = RandomInt;
 	castleState = CLOSE;
 	doorPos.pos.Set(30, 300, 1);
+	guardPos.pos.Set(155, 320, 1);
+	guardScale.x = 0.1;
+	guardScale.y = 0.1;
 }
 
 void Scene1::PlayerUpdate(double dt)
@@ -56,6 +59,17 @@ void Scene1::MapUpdate(double dt)
 void Scene1::FMSUpdate(double dt)
 {
 	SpriteAnimation *castle = dynamic_cast<SpriteAnimation*>(meshList[GEO_CASTLE]);
+	if (castle)
+	{
+		castle->Update(dt);
+		castle->m_anim->animActive = true;
+	}
+	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(meshList[GEO_GUARDS]);
+	if (guards)
+	{
+		guards->Update(dt);
+		guards->m_anim->animActive = true;
+	}
 
 	RandomInt -= dt*0.001;
 	if (RandomInt <= 0)
@@ -77,6 +91,17 @@ void Scene1::FMSUpdate(double dt)
 		{
 			doorPos.pos.y++;
 		}
+		if (guardScale.x <= 30)
+		{
+			guardScale.x++;
+			guardPos.pos.x-=0.5;
+		}
+		if (guardScale.y <= 30)
+		{
+			guardScale.y++;
+		}
+		if (guardPos.pos.y >= 250)
+			guardPos.pos.y--;
 	}
 	else
 	{
@@ -124,6 +149,7 @@ void Scene1::RenderMap()
 
 	//RenderBackground(meshList[GEO_BACKGROUND]);
 	RenderTileMap(meshList[GEO_TILESET1], m_cMap);
+	Render2DMeshWScale(meshList[GEO_GUARDS], false, guardScale.x, guardScale.y, guardPos.pos.x, guardPos.pos.y, false);
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.pos.x, doorPos.pos.y, false);
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
 

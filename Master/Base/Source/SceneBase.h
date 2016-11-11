@@ -59,7 +59,8 @@ public:
 		GEO_TILESET1,
 		GEO_TEXT,
 		GEO_CASTLE,
-		GEO_DOOR,
+		GEO_DOOR, 
+		GEO_GUARDS,
 		NUM_GEOMETRY,
 	};
 	SceneBase();

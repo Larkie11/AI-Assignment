@@ -134,16 +134,25 @@ void SceneBase::Init()
 
 	meshList[GEO_TILESET1] = MeshBuilder::GenerateTileSet("GEO_TILESET3", 30, 30);
 	meshList[GEO_TILESET1]->textureID = LoadTGA("Image//tileSet3.tga");
-	meshList[GEO_CASTLE] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 1);
+	meshList[GEO_CASTLE] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 2);
 	meshList[GEO_CASTLE]->textureID = LoadTGA("Image//Castle.tga");
 	meshList[GEO_DOOR] = MeshBuilder::Generate2DMesh("sprite", Color(1, 1, 1), 100, 100, 1, 1);
 	meshList[GEO_DOOR]->textureID = LoadTGA("Image//Door.tga");
+	meshList[GEO_GUARDS] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
+	meshList[GEO_GUARDS]->textureID = LoadTGA("Image//Guards.tga");
 
 	SpriteAnimation *castle = dynamic_cast<SpriteAnimation*>(meshList[GEO_CASTLE]);
 	if (castle)
 	{
 		castle->m_anim = new Animation();
-		castle->m_anim->Set(0, 0, 1, 1, true);
+		castle->m_anim->Set(0, 1, 1, 1, true);
+	}
+
+	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(meshList[GEO_GUARDS]);
+	if (guards)
+	{
+		guards->m_anim = new Animation();
+		guards->m_anim->Set(0, 2, 1, 1, true);
 	}
 
 	Math::InitRNG();
