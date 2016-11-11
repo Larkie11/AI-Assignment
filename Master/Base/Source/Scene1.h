@@ -38,7 +38,7 @@ private:
 	bool playCastleAnim = false;
 	CMap* m_cMap;	// Handle to the tilemaps
 	Castle castleState;
-	Vector3 doorPos;
+	Vertex doorPos;
 };
 
 #endif

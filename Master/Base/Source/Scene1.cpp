@@ -39,8 +39,7 @@ void Scene1::Init()
 	cout << RandomInt;
 	TempRandomInt = RandomInt;
 	castleState = CLOSE;
-	doorPos.x = 30;
-	doorPos.y = 300;
+	doorPos.pos.Set(30, 300, 1);
 }
 
 void Scene1::PlayerUpdate(double dt)
@@ -66,17 +65,17 @@ void Scene1::FMSUpdate(double dt)
 	}
 	if (castleState == CLOSE)
 	{
-		if (doorPos.y >= 300)
+		if (doorPos.pos.y >= 300)
 		{
-			doorPos.y--;
+			doorPos.pos.y--;
 		}
 	}
 	if (TempRandomInt % 2 == 0)
 	{
 		castleState = OPEN;
-		if (doorPos.y <= 350)
+		if (doorPos.pos.y <= 350)
 		{
-			doorPos.y++;
+			doorPos.pos.y++;
 		}
 	}
 	else
@@ -125,7 +124,7 @@ void Scene1::RenderMap()
 
 	//RenderBackground(meshList[GEO_BACKGROUND]);
 	RenderTileMap(meshList[GEO_TILESET1], m_cMap);
-	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.x, doorPos.y, false);
+	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.pos.x, doorPos.pos.y, false);
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
 
 	//RenderBackground(meshList[GEO_CASTLE]);
