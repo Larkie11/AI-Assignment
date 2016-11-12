@@ -36,7 +36,7 @@ void Scene1::Init()
 	m_cMap->Init(Application::GetInstance().GetScreenHeight(), Application::GetInstance().GetScreenWidth(), 32);
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
 	RandomInt = RandomInteger(500, 700);
-	cout << RandomInt;
+	//cout << RandomInt << endl;
 	TempRandomInt = RandomInt;
 	castleState = CLOSE;
 	doorPos.pos.Set(30, 300, 1);
@@ -51,6 +51,24 @@ void Scene1::Init()
 	guard2.scale.Set(0.1, 0.1, 1);
 	guard2.stopAnimation = false;
 	guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+
+	for (int i = 0; i < 2; i++)
+	{
+		treePosition1.pos.Set(RandomInteger(230, 500), RandomInteger(50, 300), 1);
+		treePositions.push_back(treePosition1);
+	}
+	for (int i = 0; i < RandomInteger(1, 5); i++)
+	{
+		int randTreePosition = RandomInteger(-40, 10);
+		int randTree = RandomInteger(0, treePositions.size()-1);
+		//cout << treePositions[randTree].pos.x << endl;
+		applePositions1.timer = RandomInteger(300, 800);
+		applePositions1.spawned = false;
+		applePositions1.position.pos.x = treePositions[randTree].pos.x - randTreePosition;
+		applePositions1.position.pos.y = treePositions[randTree].pos.y + 150;
+		applePositions.push_back(applePositions1);
+		cout << applePositions[i].timer << " " << applePositions1.position.pos.x << " " << applePositions1.position.pos.y << endl;
+	}	
 }
 
 void Scene1::PlayerUpdate(double dt)
@@ -63,6 +81,29 @@ void Scene1::GOupdate(double dt)
 
 void Scene1::MapUpdate(double dt)
 {
+}
+void Scene1::SpawnAppleFSMUpdate(double dt)
+{
+	for (int i = 0; i < applePositions.size(); i++)
+	{
+		applePositions[i].timer -= dt;
+		//cout << applePositions[i].timer << endl;
+		applePositions[i].newPosition.pos.y = applePositions[i].position.pos.y - 150;
+		cout << i << " " << applePositions[i].newPosition.pos.y << endl;
+		if (applePositions[i].timer <= 0 && !applePositions[i].spawned)
+		{
+			applePositions[i].spawned = true;
+			applePositions[i].position.pos.y = applePositions[i].newPosition.pos.y;
+
+		}
+		/*if (applePositions[i].spawned)
+		{
+			if (applePositions[i].position.pos.y > applePositions[i].newPosition.pos.y)
+			{
+				applePositions[i].position.pos.y--;
+			}
+		}*/
+	}
 }
 void Scene1::CastleFSMUpdate(double dt)
 {
@@ -218,9 +259,9 @@ void Scene1::Update(double dt)
 {
 	SceneBase::Update(dt);
 	CastleFSMUpdate(dt);
+	SpawnAppleFSMUpdate(dt);
 	fps = (float)(1.f / dt);
 
-	cout << RandomInt << endl;	
 }
 int Scene1::RandomInteger(int lowerLimit, int upperLimit)
 {
@@ -254,8 +295,20 @@ void Scene1::RenderMap()
 	Render2DMeshWScale(guard2.guardMesh->GetNewMesh(), false, guard2.scale.x, guard2.scale.y, guard2.position.pos.x, guard2.position.pos.y, false);
 
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.pos.x, doorPos.pos.y, false);
-	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
-
+	
+	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false); 
+	
+	for (int i = 0; i < treePositions.size(); i++)
+	{
+		Render2DMeshWScale(meshList[GEO_TREE], false, 170, 170, treePositions[i].pos.x, treePositions[i].pos.y, false);
+	}
+	for (int i = 0; i < applePositions.size(); i++)
+	{
+		if (applePositions[i].spawned)
+		{
+			Render2DMeshWScale(meshList[GEO_APPLES], false, 30, 30, applePositions[i].position.pos.x, applePositions[i].position.pos.y, false);
+		}
+	}
 	std::ostringstream ss;
 	//On screen text
 	ss.str("");

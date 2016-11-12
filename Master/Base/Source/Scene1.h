@@ -8,7 +8,6 @@
 #include "CharacterData.h"
 #include "ChangeMesh.h"
 
-
 class Scene1 : public SceneBase
 {
 public:
@@ -28,6 +27,7 @@ public:
 	void MapUpdate(double dt);
 	int RandomInteger(int lowerLimit, int upperLimit);
 	void CastleFSMUpdate(double dt);
+	void SpawnAppleFSMUpdate(double dt);
 	enum Castle
 	{
 		OPEN,
@@ -39,6 +39,13 @@ public:
 		Vector3 scale;
 		bool stopAnimation;
 		ChangeMesh* guardMesh;
+	};
+	struct Apples
+	{
+		Vertex position;
+		int timer;
+		bool spawned;
+		Vertex newPosition;
 	};
 private:
 	int RandomInt;
@@ -52,6 +59,10 @@ private:
 
 	ChangeMesh *guard2Mesh;
 	Guards guard1, guard2;
+	Vertex treePosition1, treePosition2;
+	vector<Vertex>treePositions;
+	vector<Apples>applePositions;
+	Apples applePositions1;
 };
 
 #endif

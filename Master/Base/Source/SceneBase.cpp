@@ -146,6 +146,10 @@ void SceneBase::Init()
 	meshList[GEO_GUARDSR]->textureID = LoadTGA("Image//GuardsR.tga");
 	meshList[GEO_GUARDSUP] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
 	meshList[GEO_GUARDSUP]->textureID = LoadTGA("Image//GuardsUP.tga");
+	meshList[GEO_TREE] = MeshBuilder::Generate2DMesh("sprite", Color(1, 1, 1), 100, 100, 1, 1);
+	meshList[GEO_TREE]->textureID = LoadTGA("Image//AppleTree.tga");
+	meshList[GEO_APPLES] = MeshBuilder::Generate2DMesh("sprite", Color(1, 1, 1), 100, 100, 1, 1);
+	meshList[GEO_APPLES]->textureID = LoadTGA("Image//Apple.tga");
 	SpriteAnimation *castle = dynamic_cast<SpriteAnimation*>(meshList[GEO_CASTLE]);
 	if (castle)
 	{
