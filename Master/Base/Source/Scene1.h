@@ -40,6 +40,7 @@ private:
 	Castle castleState;
 	Vertex doorPos,guardPos;
 	Vector3 guardScale;
+	bool guardMoveLeft, guardMoveRight, stopGuardAnim;
 };
 
 #endif

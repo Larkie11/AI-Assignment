@@ -35,7 +35,7 @@ void Scene1::Init()
 	m_cMap = new CMap();
 	m_cMap->Init(Application::GetInstance().GetScreenHeight(), Application::GetInstance().GetScreenWidth(), 32);
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
-	RandomInt = RandomInteger(1, 100);
+	RandomInt = RandomInteger(500, 700);
 	cout << RandomInt;
 	TempRandomInt = RandomInt;
 	castleState = CLOSE;
@@ -43,6 +43,10 @@ void Scene1::Init()
 	guardPos.pos.Set(155, 320, 1);
 	guardScale.x = 0.1;
 	guardScale.y = 0.1;
+	guardMesh = new ChangeMesh();
+	guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+	stopGuardAnim = false;
+
 }
 
 void Scene1::PlayerUpdate(double dt)
@@ -64,12 +68,12 @@ void Scene1::FMSUpdate(double dt)
 		castle->Update(dt);
 		castle->m_anim->animActive = true;
 	}
-	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(meshList[GEO_GUARDS]);
-	if (guards)
-	{
-		guards->Update(dt);
-		guards->m_anim->animActive = true;
-	}
+	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(guardMesh->GetNewMesh());
+	if (guards && !stopGuardAnim)
+		{
+			guards->Update(dt);
+			guards->m_anim->animActive = true;
+		}
 
 	RandomInt -= dt*0.001;
 	if (RandomInt <= 0)
@@ -77,16 +81,17 @@ void Scene1::FMSUpdate(double dt)
 		RandomInt = RandomInteger(300, 400);
 		TempRandomInt = RandomInt;
 	}
-	if (castleState == CLOSE)
-	{
-		if (doorPos.pos.y >= 300)
-		{
-			doorPos.pos.y--;
-		}
-	}
 	if (TempRandomInt % 2 == 0)
 	{
 		castleState = OPEN;
+		
+	}
+	else
+	{
+		castleState = CLOSE;
+	}
+	if (castleState == OPEN)
+	{
 		if (doorPos.pos.y <= 350)
 		{
 			doorPos.pos.y++;
@@ -94,18 +99,47 @@ void Scene1::FMSUpdate(double dt)
 		if (guardScale.x <= 30)
 		{
 			guardScale.x++;
-			guardPos.pos.x-=0.5;
+			guardPos.pos.x -= 0.5;
 		}
 		if (guardScale.y <= 30)
 		{
 			guardScale.y++;
 		}
-		if (guardPos.pos.y >= 250)
-			guardPos.pos.y--;
+		if (guardPos.pos.y >= 270)
+		{
+			guardPos.pos.y -= 0.5;
+			guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		}
+		else
+		{
+			guardMoveLeft = true;
+			guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
+			if (guardPos.pos.x >= 25)
+				guardPos.pos.x--;
+			else
+			{
+				guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+				stopGuardAnim = true;
+			}
+		}
 	}
-	else
+	if (castleState == CLOSE)
 	{
-		castleState = CLOSE;
+		if (guardPos.pos.x <= 140)
+		{
+			guardPos.pos.x++;
+			guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
+			stopGuardAnim = false;
+		}
+		else if(guardPos.pos.y <= 320)
+		{
+			guardPos.pos.y++;
+			guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		}
+		else if (doorPos.pos.y >= 300)
+		{
+			doorPos.pos.y--;
+		}
 	}
 }
 void Scene1::Update(double dt)
@@ -149,7 +183,7 @@ void Scene1::RenderMap()
 
 	//RenderBackground(meshList[GEO_BACKGROUND]);
 	RenderTileMap(meshList[GEO_TILESET1], m_cMap);
-	Render2DMeshWScale(meshList[GEO_GUARDS], false, guardScale.x, guardScale.y, guardPos.pos.x, guardPos.pos.y, false);
+	Render2DMeshWScale(guardMesh->GetNewMesh(), false, guardScale.x, guardScale.y, guardPos.pos.x, guardPos.pos.y, false);
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.pos.x, doorPos.pos.y, false);
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
 
@@ -165,13 +199,13 @@ void Scene1::RenderMap()
 	if (castleState == OPEN)
 	{
 		ss << "OPEN";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 280);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
 		ss.str("");
 	}
 	else
 	{
 		ss << "CLOSE";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 280);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
 		ss.str("");
 	}
 }

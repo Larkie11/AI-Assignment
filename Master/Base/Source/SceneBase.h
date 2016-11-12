@@ -8,6 +8,8 @@
 #include "Light.h"
 #include "CharacterData.h"
 #include "Map.h"
+#include "ChangeMesh.h"
+
 class SceneBase : public Scene
 {
 	enum UNIFORM_TYPE
@@ -60,7 +62,8 @@ public:
 		GEO_TEXT,
 		GEO_CASTLE,
 		GEO_DOOR, 
-		GEO_GUARDS,
+		GEO_GUARDS, GEO_GUARDSL, GEO_GUARDSR,
+
 		NUM_GEOMETRY,
 	};
 	SceneBase();
@@ -93,6 +96,8 @@ protected:
 	float fps;
 	float xtranslate;
 	float ytranslate;
+
+	ChangeMesh* guardMesh;
 };
 
 #endif // !SCENEBASE_H
