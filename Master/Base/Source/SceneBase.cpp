@@ -144,6 +144,8 @@ void SceneBase::Init()
 	meshList[GEO_GUARDSL ]->textureID = LoadTGA("Image//GuardsL.tga");
 	meshList[GEO_GUARDSR] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
 	meshList[GEO_GUARDSR]->textureID = LoadTGA("Image//GuardsR.tga");
+	meshList[GEO_GUARDSUP] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
+	meshList[GEO_GUARDSUP]->textureID = LoadTGA("Image//GuardsUP.tga");
 	SpriteAnimation *castle = dynamic_cast<SpriteAnimation*>(meshList[GEO_CASTLE]);
 	if (castle)
 	{
@@ -168,6 +170,12 @@ void SceneBase::Init()
 	{
 		guardsR->m_anim = new Animation();
 		guardsR->m_anim->Set(0, 2, 1, 1, true);
+	}
+	SpriteAnimation *guardsUP = dynamic_cast<SpriteAnimation*>(meshList[GEO_GUARDSUP]);
+	if (guardsUP)
+	{
+		guardsUP->m_anim = new Animation();
+		guardsUP->m_anim->Set(0, 2, 1, 1, true);
 	}
 	Math::InitRNG();
 	camera.Init(Vector3(0, 0, 10), Vector3(0, 0, 0), Vector3(0, 1, 0));

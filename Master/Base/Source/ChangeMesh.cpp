@@ -19,3 +19,12 @@ Mesh* ChangeMesh::GetNewMesh()
 {
 	return mesh;
 }
+
+void ChangeMesh::SetFlip(bool flip)
+{
+	this->flip = flip;
+}
+bool ChangeMesh::GetFlip()
+{
+	return flip;
+}

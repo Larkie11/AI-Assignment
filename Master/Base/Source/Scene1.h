@@ -6,6 +6,7 @@
 #include "PlayerInfo.h"
 #include "GameObject.h"
 #include "CharacterData.h"
+#include "ChangeMesh.h"
 
 
 class Scene1 : public SceneBase
@@ -26,11 +27,18 @@ public:
 	void GOupdate(double dt); // Main GO Collisions
 	void MapUpdate(double dt);
 	int RandomInteger(int lowerLimit, int upperLimit);
-	void FMSUpdate(double dt);
+	void CastleFSMUpdate(double dt);
 	enum Castle
 	{
 		OPEN,
 		CLOSE,
+	};
+	struct Guards
+	{ 
+		Vertex position;
+		Vector3 scale;
+		bool stopAnimation;
+		ChangeMesh* guardMesh;
 	};
 private:
 	int RandomInt;
@@ -38,9 +46,12 @@ private:
 	bool playCastleAnim = false;
 	CMap* m_cMap;	// Handle to the tilemaps
 	Castle castleState;
-	Vertex doorPos,guardPos;
-	Vector3 guardScale;
-	bool guardMoveLeft, guardMoveRight, stopGuardAnim;
+	Vertex doorPos,guard2Pos;
+	Vector3 guard2Scale;
+	bool guardMoveLeft,stopGuard2Anim;
+
+	ChangeMesh *guard2Mesh;
+	Guards guard1, guard2;
 };
 
 #endif

@@ -40,13 +40,17 @@ void Scene1::Init()
 	TempRandomInt = RandomInt;
 	castleState = CLOSE;
 	doorPos.pos.Set(30, 300, 1);
-	guardPos.pos.Set(155, 320, 1);
-	guardScale.x = 0.1;
-	guardScale.y = 0.1;
-	guardMesh = new ChangeMesh();
-	guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-	stopGuardAnim = false;
 
+	guard1.guardMesh = new ChangeMesh();
+	guard1.position.pos.Set(155, 320, 1);
+	guard1.scale.Set(0.1, 0.1, 1);
+	guard1.stopAnimation = false;
+
+	guard2.guardMesh = new ChangeMesh();
+	guard2.position.pos.Set(162, 360, 1);
+	guard2.scale.Set(0.1, 0.1, 1);
+	guard2.stopAnimation = false;
+	guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 }
 
 void Scene1::PlayerUpdate(double dt)
@@ -60,100 +64,163 @@ void Scene1::GOupdate(double dt)
 void Scene1::MapUpdate(double dt)
 {
 }
-void Scene1::FMSUpdate(double dt)
+void Scene1::CastleFSMUpdate(double dt)
 {
+	//Update sprite animation
 	SpriteAnimation *castle = dynamic_cast<SpriteAnimation*>(meshList[GEO_CASTLE]);
 	if (castle)
 	{
 		castle->Update(dt);
 		castle->m_anim->animActive = true;
 	}
-	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(guardMesh->GetNewMesh());
-	if (guards && !stopGuardAnim)
-		{
+	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(guard1.guardMesh->GetNewMesh());
+	if (guards && !guard1.stopAnimation)
+	{
 			guards->Update(dt);
 			guards->m_anim->animActive = true;
-		}
-
-	RandomInt -= dt*0.001;
+	}
+	SpriteAnimation *guards2 = dynamic_cast<SpriteAnimation*>(guard2.guardMesh->GetNewMesh());
+	if (guards2 && !guard2.stopAnimation)
+	{
+		guards2->Update(dt);
+		guards2->m_anim->animActive = true;
+	}
+	//Random another number for next state
 	if (RandomInt <= 0)
 	{
 		RandomInt = RandomInteger(300, 400);
 		TempRandomInt = RandomInt;
+		if (castleState == CLOSE)
+		if (guard1.position.pos.y != 320 || guard2.position.pos.x != 162)
+		{
+			guard1.position.pos.y = 320;
+			guard2.position.pos.y = 360;
+			guard2.position.pos.x = 162;
+		}
 	}
+	//If even number, castle is open
 	if (TempRandomInt % 2 == 0)
 	{
 		castleState = OPEN;
-		
 	}
+	//Odd number castle is closed
 	else
 	{
 		castleState = CLOSE;
 	}
+	//Animation and position of guard & door
 	if (castleState == OPEN)
 	{
 		if (doorPos.pos.y <= 350)
 		{
 			doorPos.pos.y++;
 		}
-		if (guardScale.x <= 30)
+		if (guard2.scale.x <= 30)
 		{
-			guardScale.x++;
-			guardPos.pos.x -= 0.5;
+			guard2.scale.x++;
+			guard2.position.pos.x -= 0.5;
+			guard2.scale.y++;
+
+			if (guard1.scale.x <= 30)
+			{
+				guard1.scale.x++;
+				guard1.scale.y++;
+
+				guard1.position.pos.x -= 0.5;
+			}
 		}
-		if (guardScale.y <= 30)
+		if (guard1.position.pos.y >= 270)
 		{
-			guardScale.y++;
-		}
-		if (guardPos.pos.y >= 270)
-		{
-			guardPos.pos.y -= 0.5;
-			guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+			guard1.position.pos.y -= 0.5;
+			guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 		}
 		else
 		{
-			guardMoveLeft = true;
-			guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
-			if (guardPos.pos.x >= 25)
-				guardPos.pos.x--;
+			guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
+			if (guard1.position.pos.x >= 25)
+				guard1.position.pos.x--;
 			else
 			{
-				guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-				stopGuardAnim = true;
+				guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+				guard1.stopAnimation = true;
+			}
+		}
+		if (guard2.position.pos.y >= 270)
+		{
+			guard2.position.pos.y -= 0.5;
+			guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		}
+		else
+		{
+			guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
+			if (guard2.position.pos.x <= 250)
+				guard2.position.pos.x++;
+			else
+			{
+				guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+				guard2.stopAnimation = true;
+				RandomInt -= dt*0.001;
 			}
 		}
 	}
 	if (castleState == CLOSE)
 	{
-		if (guardPos.pos.x <= 140)
+		if (guard1.position.pos.x <= 140)
 		{
-			guardPos.pos.x++;
-			guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
-			stopGuardAnim = false;
+			guard1.position.pos.x++;
+			guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
+			guard1.stopAnimation = false;
 		}
-		else if(guardPos.pos.y <= 320)
+		else if (guard1.position.pos.y <= 350)
 		{
-			guardPos.pos.y++;
-			guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+			guard1.position.pos.y++;
+			guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
 		}
-		else if (doorPos.pos.y >= 300)
+
+		if (guard1.position.pos.x >= 80)
 		{
-			doorPos.pos.y--;
+			if (guard2.position.pos.x >= 145)
+			{
+				guard2.position.pos.x--;
+				guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
+				guard2.stopAnimation = false;
+			}
+			else if (guard2.position.pos.y <= 340)
+			{
+				guard2.position.pos.y++;
+				guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
+			}
+			else if (doorPos.pos.y >= 300)
+			{
+				doorPos.pos.y--;
+
+				if (guard1.scale.x >= 0.01)
+				{
+					guard1.scale.x -= 0.5;
+					guard1.scale.y -= 0.5;
+					guard1.position.pos.x += 0.3;
+				}
+				if (guard2.scale.x >= 0.01)
+				{
+					guard2.scale.x -= 0.5;
+					guard2.scale.y -= 0.5;
+					guard2.position.pos.x += 0.3;
+				}
+			}
+			else
+			{
+				RandomInt -= dt*0.01;
+			}
 		}
 	}
 }
 void Scene1::Update(double dt)
 {
 	SceneBase::Update(dt);
-	FMSUpdate(dt);
+	CastleFSMUpdate(dt);
 	fps = (float)(1.f / dt);
 
-	cout << RandomInt << endl;
-	if (Application::IsKeyPressed(VK_F2))
-	{
-		RandomInt = RandomInteger(1, 100);
-	}
-	
+	cout << RandomInt << endl;	
 }
 int Scene1::RandomInteger(int lowerLimit, int upperLimit)
 {
@@ -183,11 +250,11 @@ void Scene1::RenderMap()
 
 	//RenderBackground(meshList[GEO_BACKGROUND]);
 	RenderTileMap(meshList[GEO_TILESET1], m_cMap);
-	Render2DMeshWScale(guardMesh->GetNewMesh(), false, guardScale.x, guardScale.y, guardPos.pos.x, guardPos.pos.y, false);
+	Render2DMeshWScale(guard1.guardMesh->GetNewMesh(), false, guard1.scale.x, guard1.scale.y, guard1.position.pos.x, guard1.position.pos.y, false);
+	Render2DMeshWScale(guard2.guardMesh->GetNewMesh(), false, guard2.scale.x, guard2.scale.y, guard2.position.pos.x, guard2.position.pos.y, false);
+
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.pos.x, doorPos.pos.y, false);
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
-
-	//RenderBackground(meshList[GEO_CASTLE]);
 
 	std::ostringstream ss;
 	//On screen text

@@ -8,7 +8,6 @@
 #include "Light.h"
 #include "CharacterData.h"
 #include "Map.h"
-#include "ChangeMesh.h"
 
 class SceneBase : public Scene
 {
@@ -62,7 +61,7 @@ public:
 		GEO_TEXT,
 		GEO_CASTLE,
 		GEO_DOOR, 
-		GEO_GUARDS, GEO_GUARDSL, GEO_GUARDSR,
+		GEO_GUARDS, GEO_GUARDSL, GEO_GUARDSR, GEO_GUARDSUP,
 
 		NUM_GEOMETRY,
 	};
@@ -97,7 +96,6 @@ protected:
 	float xtranslate;
 	float ytranslate;
 
-	ChangeMesh* guardMesh;
 };
 
 #endif // !SCENEBASE_H
