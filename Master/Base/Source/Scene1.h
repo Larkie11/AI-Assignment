@@ -28,6 +28,9 @@ public:
 	int RandomInteger(int lowerLimit, int upperLimit);
 	void CastleFSMUpdate(double dt);
 	void SpawnAppleFSMUpdate(double dt);
+	void HealPointFSMUpdate(double dt);
+	void KingSlimeFSMUpdate(double dt);
+
 	enum Castle
 	{
 		OPEN,
@@ -47,6 +50,22 @@ public:
 		bool spawned;
 		Vertex newPosition;
 	};
+	enum HealPoint
+	{
+		IDLE,
+		HEAL,
+		REST,
+	};
+
+	enum KingSlime
+	{
+		LAZE,
+		MOVE,
+		CHASE,
+		RUN,
+		EAT,
+	};
+
 private:
 	int RandomInt;
 	int TempRandomInt;
@@ -63,6 +82,25 @@ private:
 	vector<Vertex>treePositions;
 	vector<Apples>applePositions;
 	Apples applePositions1;
+
+	//Heal Point
+	int PP;
+	int PPcounter;
+	HealPoint healpointState;
+	Vertex healpointPos;
+
+	//Kingslime
+	int Hunger;
+	int HungerCounter;
+	int RandomInt2;
+	int TempRandomInt2;
+	int MoveCounter;
+	int RandomMoveX;
+	int RandomMoveY;
+	KingSlime KSstate;
+	Vertex KSpos;
+	Vector3 vel;
+	float p_speed;
 };
 
 #endif

@@ -67,8 +67,25 @@ void Scene1::Init()
 		applePositions1.position.pos.x = treePositions[randTree].pos.x - randTreePosition;
 		applePositions1.position.pos.y = treePositions[randTree].pos.y + 150;
 		applePositions.push_back(applePositions1);
-		cout << applePositions[i].timer << " " << applePositions1.position.pos.x << " " << applePositions1.position.pos.y << endl;
+		//cout << applePositions[i].timer << " " << applePositions1.position.pos.x << " " << applePositions1.position.pos.y << endl;
 	}	
+
+	//Heal Point data
+	healpointState = HEAL;
+	PP = 3;
+	PPcounter = 100;
+	healpointPos.pos.Set(450, 100, 1);
+
+	//KingSlime data
+	Hunger = 4;
+	HungerCounter = 100;
+	MoveCounter = 100;
+	RandomInt2 = RandomInteger(1, 200);
+	TempRandomInt2 = RandomInt2;
+	RandomMoveX = RandomInteger(-5, 5);
+	RandomMoveY = RandomInteger(-5, 5);
+	KSstate = LAZE;
+	KSpos.pos.Set(500, 300, 1);
 }
 
 void Scene1::PlayerUpdate(double dt)
@@ -89,7 +106,7 @@ void Scene1::SpawnAppleFSMUpdate(double dt)
 		applePositions[i].timer -= dt;
 		//cout << applePositions[i].timer << endl;
 		applePositions[i].newPosition.pos.y = applePositions[i].position.pos.y - 150;
-		cout << i << " " << applePositions[i].newPosition.pos.y << endl;
+		//cout << i << " " << applePositions[i].newPosition.pos.y << endl;
 		if (applePositions[i].timer <= 0 && !applePositions[i].spawned)
 		{
 			applePositions[i].spawned = true;
@@ -255,12 +272,129 @@ void Scene1::CastleFSMUpdate(double dt)
 		}
 	}
 }
+void Scene1::HealPointFSMUpdate(double dt)
+{
+	//HealPoint FSM
+	if (healpointState == IDLE)
+	{
+
+	}
+	else if (healpointState == HEAL)
+	{
+		PPcounter-- * dt;
+		if (PPcounter == 0)
+		{
+			PP -= 1;
+			PPcounter = 100;
+			if (PP <= 0)
+				healpointState = REST;
+		}
+	}
+	else if (healpointState == REST)
+	{
+		PPcounter-- * dt;
+		if (PPcounter == 10)
+		{
+			PP += 1;
+			PPcounter = 100;
+			if (PP >= 10)
+				healpointState = IDLE;
+		}
+	}
+}
+void Scene1::KingSlimeFSMUpdate(double dt)
+{
+	//King Slime FSM
+	SpriteAnimation *KSidle = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSIDLE]);
+	if (KSidle)
+	{
+		KSidle->Update(dt);
+		KSidle->m_anim->animActive = true;
+	}
+	SpriteAnimation *KSmoveL = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSMOVEL]);
+	if (KSmoveL)
+	{
+		KSmoveL->Update(dt);
+		KSmoveL->m_anim->animActive = true;
+	}
+	SpriteAnimation *KSmoveR = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSMOVER]);
+	if (KSmoveR)
+	{
+		KSmoveR->Update(dt);
+		KSmoveR->m_anim->animActive = true;
+	}
+
+	RandomInt2 -= dt* 0.001;
+	if (RandomInt2 <= 0)
+	{
+		RandomInt2 = RandomInteger(1, 200);
+		TempRandomInt2 = RandomInt2;
+	}
+
+	MoveCounter -= dt * 0.001;
+	if (KSstate != EAT && MoveCounter <= 0)
+	{
+		MoveCounter = 300;
+		Hunger--;
+		if (Hunger == 0)
+			KSstate = EAT;
+		RandomMoveX = RandomInteger(-50, 50);
+		RandomMoveY = RandomInteger(-50, 50);
+	}
+
+	if (KSstate != EAT && TempRandomInt2 % 2 == 0)
+		KSstate = LAZE;
+	else if (Hunger == 0)
+		KSstate = EAT;
+	else
+	{
+		KSstate = MOVE;
+	}
+
+	if (KSstate == MOVE)
+	{
+		KSpos.pos.x += RandomMoveX * dt;
+		KSpos.pos.y += RandomMoveY * dt;
+	}
+	else if (KSstate == EAT)
+	{
+		Vector3 d;
+
+		for (int i = 0; i < applePositions.size(); i++)
+		{
+			d.x = applePositions[i].newPosition.pos.x - KSpos.pos.x;
+			d.y = applePositions[i].newPosition.pos.y - KSpos.pos.y;
+
+			if (d.IsZero())
+			{
+				return;
+			}
+			p_speed = 10.f;
+			this->vel = d.Normalized() * p_speed;
+			KSpos.pos.x += vel.x * dt;
+			KSpos.pos.y += vel.y * dt;
+
+			float distanceToCheck = 0.04f * p_speed;
+			if (d.LengthSquared() <= distanceToCheck * distanceToCheck)
+			{
+				applePositions[i].spawned = false;
+				Hunger = 100;
+			}
+		}
+	}
+}
+
 void Scene1::Update(double dt)
 {
 	SceneBase::Update(dt);
 	CastleFSMUpdate(dt);
 	SpawnAppleFSMUpdate(dt);
+	HealPointFSMUpdate(dt);
+	KingSlimeFSMUpdate(dt);
+
 	fps = (float)(1.f / dt);
+
+	cout << Hunger << endl;
 
 }
 int Scene1::RandomInteger(int lowerLimit, int upperLimit)
@@ -327,6 +461,25 @@ void Scene1::RenderMap()
 		ss << "CLOSE";
 		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
 		ss.str("");
+	}
+
+	//Render HealPoint
+	if (healpointState == HEAL)
+		Render2DMeshWScale(meshList[GEO_HEAL_HEAL], false, 10, 10, healpointPos.pos.x, healpointPos.pos.y, false);
+	else if (healpointState == REST)
+		Render2DMeshWScale(meshList[GEO_HEAL_REST], false, 10, 10, healpointPos.pos.x, healpointPos.pos.y, false);
+	else
+		Render2DMeshWScale(meshList[GEO_HEAL_IDLE], false, 10, 10, healpointPos.pos.x, healpointPos.pos.y, false);
+
+	//Render Kingslime
+	if (KSstate == IDLE)
+		Render2DMeshWScale(meshList[GEO_KSIDLE], false, 80, 50, KSpos.pos.x, KSpos.pos.y, false);
+	else if (KSstate == MOVE || KSstate == EAT)
+	{
+		if (RandomMoveX < 0)
+			Render2DMeshWScale(meshList[GEO_KSMOVEL], false, 100, 80, KSpos.pos.x, KSpos.pos.y, false);
+		else
+			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.pos.x, KSpos.pos.y, false);
 	}
 }
 

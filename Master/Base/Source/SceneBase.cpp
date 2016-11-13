@@ -181,6 +181,37 @@ void SceneBase::Init()
 		guardsUP->m_anim = new Animation();
 		guardsUP->m_anim->Set(0, 2, 1, 1, true);
 	}
+
+	meshList[GEO_HEAL_IDLE] = MeshBuilder::GenerateSphere("HealPoint Idle", Color(1, 0, 0), 12, 12, 1);
+	meshList[GEO_HEAL_REST] = MeshBuilder::GenerateSphere("HealPoint Idle", Color(0, 0, 1), 12, 12, 1);
+	meshList[GEO_HEAL_HEAL] = MeshBuilder::GenerateSphere("HealPoint Idle", Color(0, 1, 0), 12, 12, 1);
+
+	meshList[GEO_KSIDLE] = MeshBuilder::GenerateSpriteAnimation("Idle Slime", 1, 2);
+	meshList[GEO_KSIDLE]->textureID = LoadTGA("Image//KingSlimeIdle.tga");
+	meshList[GEO_KSMOVEL] = MeshBuilder::GenerateSpriteAnimation("Move Slime", 1, 7);
+	meshList[GEO_KSMOVEL]->textureID = LoadTGA("Image//KingSlimeMove.tga");
+	meshList[GEO_KSMOVER] = MeshBuilder::GenerateSpriteAnimation("Move Slime", 1, 7);
+	meshList[GEO_KSMOVER]->textureID = LoadTGA("Image//KingSlimeMoveR.tga");
+
+	SpriteAnimation *ksIDLE = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSIDLE]);
+	if (ksIDLE)
+	{
+		ksIDLE->m_anim = new Animation();
+		ksIDLE->m_anim->Set(0, 1, 1, 1, true);
+	}
+	SpriteAnimation *ksMOVEL = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSMOVEL]);
+	if (ksMOVEL)
+	{
+		ksMOVEL->m_anim = new Animation();
+		ksMOVEL->m_anim->Set(0, 6, 1, 1, true);
+	}
+	SpriteAnimation *ksMOVER = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSMOVER]);
+	if (ksMOVER)
+	{
+		ksMOVER->m_anim = new Animation();
+		ksMOVER->m_anim->Set(0, 6, 1, 1, true);
+	}
+
 	Math::InitRNG();
 	camera.Init(Vector3(0, 0, 10), Vector3(0, 0, 0), Vector3(0, 1, 0));
 }
