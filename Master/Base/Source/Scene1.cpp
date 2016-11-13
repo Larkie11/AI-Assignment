@@ -52,9 +52,10 @@ void Scene1::Init()
 	guard2.stopAnimation = false;
 	guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 1; i < 3; i++)
 	{
-		treePosition1.pos.Set(RandomInteger(230, 500), RandomInteger(50, 300), 1);
+		int randY = RandomInteger(100, 200) * i;
+		treePosition1.pos.Set(RandomInteger(230, 500), randY, 1);
 		treePositions.push_back(treePosition1);
 	}
 	for (int i = 0; i < RandomInteger(1, 5); i++)
@@ -394,8 +395,6 @@ void Scene1::Update(double dt)
 
 	fps = (float)(1.f / dt);
 
-	cout << Hunger << endl;
-
 }
 int Scene1::RandomInteger(int lowerLimit, int upperLimit)
 {
@@ -422,6 +421,7 @@ void Scene1::RenderMap()
 	{
 		xpos += 0.5f;
 	}
+	std::ostringstream ss;
 
 	//RenderBackground(meshList[GEO_BACKGROUND]);
 	RenderTileMap(meshList[GEO_TILESET1], m_cMap);
@@ -435,32 +435,6 @@ void Scene1::RenderMap()
 	for (int i = 0; i < treePositions.size(); i++)
 	{
 		Render2DMeshWScale(meshList[GEO_TREE], false, 170, 170, treePositions[i].pos.x, treePositions[i].pos.y, false);
-	}
-	for (int i = 0; i < applePositions.size(); i++)
-	{
-		if (applePositions[i].spawned)
-		{
-			Render2DMeshWScale(meshList[GEO_APPLES], false, 30, 30, applePositions[i].position.pos.x, applePositions[i].position.pos.y, false);
-		}
-	}
-	std::ostringstream ss;
-	//On screen text
-	ss.str("");
-	ss.precision(5);
-	ss << "FPS: " << fps;
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 0), 30, 0, 0);
-	ss.str("");
-	if (castleState == OPEN)
-	{
-		ss << "OPEN";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
-		ss.str("");
-	}
-	else
-	{
-		ss << "CLOSE";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
-		ss.str("");
 	}
 
 	//Render HealPoint
@@ -481,6 +455,50 @@ void Scene1::RenderMap()
 		else
 			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.pos.x, KSpos.pos.y, false);
 	}
+	ss << "Spawning apple count " << applePositions.size();
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 350, 500);
+	int y = 0;
+	for (int i = 0; i < applePositions.size(); i++)
+	{
+		ss.str("");
+		y += 20;
+		if (applePositions[i].timer > 0)
+			ss << "Apple " << i + 1 << " " << applePositions[i].timer;
+		else
+			ss << "Apple " << i + 1 << " Spawned";
+
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 500, y);
+
+		if (applePositions[i].spawned)
+		{
+			Render2DMeshWScale(meshList[GEO_APPLES], false, 30, 30, applePositions[i].position.pos.x, applePositions[i].position.pos.y, false);
+		}
+	}
+	//On screen text
+	ss.str("");
+	ss.precision(5);
+	ss << "FPS: " << fps;
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 0), 30, 0, 0);
+	ss.str("");
+	if (castleState == OPEN)
+	{
+		ss << "OPEN";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
+		ss.str("");
+	}
+	else
+	{
+		ss << "CLOSE";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
+		ss.str("");
+	}
+	ss.str("");
+	ss << "To next random state " << RandomInt;
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 570);
+	ss.str("");
+	ss << "Previous random state number " << TempRandomInt;
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 585);
+
 }
 
 void Scene1::RenderGO()
