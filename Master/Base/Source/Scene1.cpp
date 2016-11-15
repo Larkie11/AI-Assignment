@@ -30,13 +30,17 @@ void Scene1::Reset()
 void Scene1::Init()
 {
 	SceneBase::Init();
+	InitFSM();
 	srand((unsigned)time(NULL));
 	// Initialise and load the tile map
 	m_cMap = new CMap();
 	m_cMap->Init(Application::GetInstance().GetScreenHeight(), Application::GetInstance().GetScreenWidth(), 32);
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
+}
+
+void Scene1::InitFSM()
+{
 	RandomInt = RandomInteger(500, 700);
-	//cout << RandomInt << endl;
 	TempRandomInt = RandomInt;
 	castleState = CLOSE;
 	doorPos.pos.Set(30, 300, 1);
@@ -55,21 +59,23 @@ void Scene1::Init()
 	for (int i = 1; i < 3; i++)
 	{
 		int randY = RandomInteger(100, 200) * i;
-		treePosition1.pos.Set(RandomInteger(230, 500), randY, 1);
+		int randX = RandomInteger(280, 300) * i;
+		treePosition1.pos.Set(randX, randY, 1);
 		treePositions.push_back(treePosition1);
 	}
 	for (int i = 0; i < RandomInteger(1, 5); i++)
 	{
-		int randTreePosition = RandomInteger(-40, 10);
-		int randTree = RandomInteger(0, treePositions.size()-1);
-		//cout << treePositions[randTree].pos.x << endl;
+		int randTreePosition = RandomInteger(-130, 10);
+		int randTree = RandomInteger(0, treePositions.size() - 1);
 		applePositions1.timer = RandomInteger(300, 800);
 		applePositions1.spawned = false;
 		applePositions1.position.pos.x = treePositions[randTree].pos.x - randTreePosition;
-		applePositions1.position.pos.y = treePositions[randTree].pos.y + 150;
+		applePositions1.position.pos.y = treePositions[randTree].pos.y + 90;
+		applePositions1.newPosition.pos.Set(applePositions1.position.pos.x, applePositions1.position.pos.y - 80, 1);
+		applePositions1.appleStates = SPAWNING;
+		applePositions1.despawn = 500;
 		applePositions.push_back(applePositions1);
-		//cout << applePositions[i].timer << " " << applePositions1.position.pos.x << " " << applePositions1.position.pos.y << endl;
-	}	
+	}
 
 	//Heal Point data
 	healpointState = HEAL;
@@ -78,7 +84,7 @@ void Scene1::Init()
 	healpointPos.pos.Set(450, 100, 1);
 
 	//KingSlime data
-	Hunger = 4;
+	Hunger = 10;
 	HungerCounter = 100;
 	MoveCounter = 100;
 	RandomInt2 = RandomInteger(1, 200);
@@ -100,29 +106,34 @@ void Scene1::GOupdate(double dt)
 void Scene1::MapUpdate(double dt)
 {
 }
+
 void Scene1::SpawnAppleFSMUpdate(double dt)
 {
 	for (int i = 0; i < applePositions.size(); i++)
 	{
 		applePositions[i].timer -= dt;
 		//cout << applePositions[i].timer << endl;
-		applePositions[i].newPosition.pos.y = applePositions[i].position.pos.y - 150;
 		//cout << i << " " << applePositions[i].newPosition.pos.y << endl;
 		if (applePositions[i].timer <= 0 && !applePositions[i].spawned)
 		{
 			applePositions[i].spawned = true;
-			applePositions[i].position.pos.y = applePositions[i].newPosition.pos.y;
-
+			/**/
 		}
-		/*if (applePositions[i].spawned)
+		if (applePositions[i].spawned)
 		{
 			if (applePositions[i].position.pos.y > applePositions[i].newPosition.pos.y)
-			{
 				applePositions[i].position.pos.y--;
-			}
-		}*/
+			else
+			applePositions[i].despawn-=0.0001 * dt;
+			cout << i << " " << applePositions[i].despawn << endl;
+		}
+		if (applePositions[i].despawn <= 0)
+		{
+			applePositions[i].spawned = false;
+		}
 	}
 }
+
 void Scene1::CastleFSMUpdate(double dt)
 {
 	//Update sprite animation
@@ -149,31 +160,56 @@ void Scene1::CastleFSMUpdate(double dt)
 	{
 		RandomInt = RandomInteger(300, 400);
 		TempRandomInt = RandomInt;
+		addedCount = false;
 		if (castleState == CLOSE)
-		if (guard1.position.pos.y != 320 || guard2.position.pos.x != 162)
 		{
-			guard1.position.pos.y = 320;
-			guard2.position.pos.y = 360;
-			guard2.position.pos.x = 162;
+			//Rest guard positions
+			if (guard1.position.pos.y != 320 || guard2.position.pos.x != 162)
+			{
+				guard1.position.pos.y = 320;
+				guard2.position.pos.y = 360;
+				guard2.position.pos.x = 162;
+			}
 		}
 	}
 	//If even number, castle is open
 	if (TempRandomInt % 2 == 0)
 	{
 		castleState = OPEN;
+		if (!addedCount)
+		{
+			open++;
+			addedCount = true;
+		}
 	}
 	//Odd number castle is closed
 	else
 	{
 		castleState = CLOSE;
+		if (!addedCount)
+		{
+			close++;
+			addedCount = true;
+		}
 	}
-	//Animation and position of guard & door
-	if (castleState == OPEN)
+	switch (castleState)
 	{
+	case Scene1::OPEN:
+		guardState = MOVINGOUT;
 		if (doorPos.pos.y <= 350)
 		{
 			doorPos.pos.y++;
 		}
+		break;
+	case Scene1::CLOSE:
+		guardState = MOVINGIN;
+		break;
+	default:
+		break;
+	}
+	switch (guardState)
+	{
+	case Scene1::MOVINGOUT:
 		if (guard2.scale.x <= 30)
 		{
 			guard2.scale.x++;
@@ -221,9 +257,8 @@ void Scene1::CastleFSMUpdate(double dt)
 				RandomInt -= dt*0.001;
 			}
 		}
-	}
-	if (castleState == CLOSE)
-	{
+		break;
+	case Scene1::MOVINGIN:
 		if (guard1.position.pos.x <= 140)
 		{
 			guard1.position.pos.x++;
@@ -271,8 +306,14 @@ void Scene1::CastleFSMUpdate(double dt)
 				RandomInt -= dt*0.01;
 			}
 		}
+		break;
+	case Scene1::IDLING:
+		break;
+	default:
+		break;
 	}
 }
+
 void Scene1::HealPointFSMUpdate(double dt)
 {
 	//HealPoint FSM
@@ -303,6 +344,7 @@ void Scene1::HealPointFSMUpdate(double dt)
 		}
 	}
 }
+
 void Scene1::KingSlimeFSMUpdate(double dt)
 {
 	//King Slime FSM
@@ -354,8 +396,14 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 
 	if (KSstate == MOVE)
 	{
-		KSpos.pos.x += RandomMoveX * dt;
-		KSpos.pos.y += RandomMoveY * dt;
+		if (KSpos.pos.x >= 0 && KSpos.pos.x <= 700)
+		{
+			KSpos.pos.x += RandomMoveX * dt;
+		}
+		if (KSpos.pos.y >= 0 && KSpos.pos.y <= 300)
+		{
+			KSpos.pos.y += RandomMoveY * dt;
+		}
 	}
 	else if (KSstate == EAT)
 	{
@@ -363,8 +411,8 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 
 		for (int i = 0; i < applePositions.size(); i++)
 		{
-			d.x = applePositions[i].newPosition.pos.x - KSpos.pos.x;
-			d.y = applePositions[i].newPosition.pos.y - KSpos.pos.y;
+			d.x = applePositions[i].position.pos.x - KSpos.pos.x;
+			d.y = applePositions[i].position.pos.y - KSpos.pos.y;
 
 			if (d.IsZero())
 			{
@@ -396,42 +444,27 @@ void Scene1::Update(double dt)
 	fps = (float)(1.f / dt);
 
 }
+
 int Scene1::RandomInteger(int lowerLimit, int upperLimit)
 {
 	return rand() % (upperLimit - lowerLimit + 1) + lowerLimit;
 }
-void Scene1::RenderMap()
+
+void Scene1::RenderFSM()
 {
-	static float xpos = 0.f;
-	static float ypos = 0.f;
-
-	if (Application::IsKeyPressed('U'))
-	{
-		ypos += 0.5f;
-	}
-	if (Application::IsKeyPressed('J'))
-	{
-		ypos -= 0.5f;
-	}
-	if (Application::IsKeyPressed('H'))
-	{
-		xpos -= 0.5f;
-	}
-	if (Application::IsKeyPressed('K'))
-	{
-		xpos += 0.5f;
-	}
-	std::ostringstream ss;
-
-	//RenderBackground(meshList[GEO_BACKGROUND]);
-	RenderTileMap(meshList[GEO_TILESET1], m_cMap);
 	Render2DMeshWScale(guard1.guardMesh->GetNewMesh(), false, guard1.scale.x, guard1.scale.y, guard1.position.pos.x, guard1.position.pos.y, false);
 	Render2DMeshWScale(guard2.guardMesh->GetNewMesh(), false, guard2.scale.x, guard2.scale.y, guard2.position.pos.x, guard2.position.pos.y, false);
 
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.pos.x, doorPos.pos.y, false);
-	
-	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false); 
-	
+
+	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
+	for (int i = 0; i < applePositions.size(); i++)
+	{
+		if (applePositions[i].spawned)
+		{
+			Render2DMeshWScale(meshList[GEO_APPLES], false, 30, 30, applePositions[i].position.pos.x, applePositions[i].position.pos.y, false);
+		}
+	}
 	for (int i = 0; i < treePositions.size(); i++)
 	{
 		Render2DMeshWScale(meshList[GEO_TREE], false, 170, 170, treePositions[i].pos.x, treePositions[i].pos.y, false);
@@ -455,42 +488,38 @@ void Scene1::RenderMap()
 		else
 			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.pos.x, KSpos.pos.y, false);
 	}
-	ss << "Spawning apple count " << applePositions.size();
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 350, 500);
-	int y = 0;
-	for (int i = 0; i < applePositions.size(); i++)
-	{
-		ss.str("");
-		y += 20;
-		if (applePositions[i].timer > 0)
-			ss << "Apple " << i + 1 << " " << applePositions[i].timer;
-		else
-			ss << "Apple " << i + 1 << " Spawned";
 
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 500, y);
+}
 
-		if (applePositions[i].spawned)
-		{
-			Render2DMeshWScale(meshList[GEO_APPLES], false, 30, 30, applePositions[i].position.pos.x, applePositions[i].position.pos.y, false);
-		}
-	}
+void Scene1::RenderFSMText()
+{
+	std::ostringstream ss;
+
+	ss.str("");
+	ss << "Spawning " << applePositions.size() << " apples";
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 450, 3);
+
 	//On screen text
 	ss.str("");
 	ss.precision(5);
 	ss << "FPS: " << fps;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 0), 30, 0, 0);
 	ss.str("");
-	if (castleState == OPEN)
+	ss << "Open: " << open << " Close: " << close;
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 520);
+
+	switch (castleState)
 	{
+	case OPEN:
+		ss.str("");
 		ss << "OPEN";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
+		break;
+	case CLOSE:
 		ss.str("");
-	}
-	else
-	{
 		ss << "CLOSE";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 550);
-		ss.str("");
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
+		break;
 	}
 	ss.str("");
 	ss << "To next random state " << RandomInt;
@@ -499,6 +528,113 @@ void Scene1::RenderMap()
 	ss << "Previous random state number " << TempRandomInt;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 585);
 
+	ss.str("");
+	ss << "KS Hunger: " << Hunger;
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 200);
+
+	switch (healpointState)
+	{
+	case REST:
+		ss.str("");
+		ss << "RECOVERING ITSELF";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 70);
+		break;
+	case IDLE:
+		ss.str("");
+		ss << "IDLING";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 70);
+		break;
+	case HEAL:
+		ss.str("");
+		ss << "HEALING PLAYER";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 70);
+		break;
+	}
+	switch (KSstate)
+	{
+	case Scene1::LAZE:
+		ss.str("");
+		ss << "KS State:IDLING";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		break;
+	case Scene1::MOVE:
+		ss.str("");
+		ss << "KS State:MOVING";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		break;
+	case Scene1::CHASE:
+		ss.str("");
+		ss << "KS State:CHASING";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		break;
+	case Scene1::RUN:
+		ss.str("");
+		ss << "KS State:RUNNINIG";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		break;
+	case Scene1::EAT:
+		ss.str("");
+		ss << "KS State:EATING";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		break;
+	default:
+		break;
+	}
+	ss.str("");
+	ss << "PP: " << PP;
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 50);
+	int y = 0;
+	for (int i = 0; i < applePositions.size(); i++)
+	{
+		ss.str("");
+		y += 20;
+		if (applePositions[i].timer > 0)
+			ss << "Apple " << i + 1 << " " << applePositions[i].timer;
+		if (applePositions[i].timer <= 0 && applePositions[i].despawn > 250)
+			ss << "Apple " << i + 1 << " Spawned";
+		if (applePositions[i].despawn < 250)
+			ss << "Apple " << i + 1 << " Rotting";
+		if (applePositions[i].despawn <= 0)
+		{
+			ss << "Apple " << i + 1 << " Despawned";
+			int randTreePosition = RandomInteger(-130, 10);
+			int randTree = RandomInteger(0, treePositions.size() - 1);
+			applePositions[i].timer = RandomInteger(300, 800);
+			applePositions[i].position.pos.x = treePositions[randTree].pos.x - randTreePosition;
+			applePositions[i].position.pos.y = treePositions[randTree].pos.y + 90;
+			applePositions[i].newPosition.pos.Set(applePositions[i].position.pos.x, applePositions[i].position.pos.y - 80, 1);
+			applePositions[i].despawn = 500;
+		}
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 500, y);
+	}
+}
+
+void Scene1::RenderMap()
+{
+	static float xpos = 0.f;
+	static float ypos = 0.f;
+
+	if (Application::IsKeyPressed('U'))
+	{
+		ypos += 0.5f;
+	}
+	if (Application::IsKeyPressed('J'))
+	{
+		ypos -= 0.5f;
+	}
+	if (Application::IsKeyPressed('H'))
+	{
+		xpos -= 0.5f;
+	}
+	if (Application::IsKeyPressed('K'))
+	{
+		xpos += 0.5f;
+	}
+	
+
+	//RenderBackground(meshList[GEO_BACKGROUND]);
+	RenderTileMap(meshList[GEO_TILESET1], m_cMap);
+	
 }
 
 void Scene1::RenderGO()
@@ -509,6 +645,8 @@ void Scene1::Render()
 {
 	SceneBase::Render();
 	RenderMap();
+	RenderFSM();
+	RenderFSMText();
 }
 
 void Scene1::Exit()

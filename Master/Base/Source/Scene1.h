@@ -26,6 +26,9 @@ public:
 	void GOupdate(double dt); // Main GO Collisions
 	void MapUpdate(double dt);
 	int RandomInteger(int lowerLimit, int upperLimit);
+	void InitFSM();
+	void RenderFSM();
+	void RenderFSMText();
 	void CastleFSMUpdate(double dt);
 	void SpawnAppleFSMUpdate(double dt);
 	void HealPointFSMUpdate(double dt);
@@ -35,6 +38,20 @@ public:
 	{
 		OPEN,
 		CLOSE,
+		DEFENCE,
+	};
+	enum Guard
+	{
+		MOVINGOUT,
+		MOVINGIN,
+		IDLING,
+		ATTACKING,
+	};
+	enum ApplesStates
+	{
+		SPAWNING,
+		SPAWNED,
+		ROTTING,
 	};
 	struct Guards
 	{ 
@@ -45,10 +62,12 @@ public:
 	};
 	struct Apples
 	{
+		ApplesStates appleStates;
 		Vertex position;
 		int timer;
 		bool spawned;
 		Vertex newPosition;
+		int despawn;
 	};
 	enum HealPoint
 	{
@@ -75,13 +94,17 @@ private:
 	Vertex doorPos,guard2Pos;
 	Vector3 guard2Scale;
 	bool guardMoveLeft,stopGuard2Anim;
+	Guard guardState;
 
 	ChangeMesh *guard2Mesh;
 	Guards guard1, guard2;
-	Vertex treePosition1, treePosition2;
+	Vertex treePosition1;
 	vector<Vertex>treePositions;
 	vector<Apples>applePositions;
 	Apples applePositions1;
+	int close = 0;
+	int open = 0;
+	bool addedCount = false;
 
 	//Heal Point
 	int PP;
