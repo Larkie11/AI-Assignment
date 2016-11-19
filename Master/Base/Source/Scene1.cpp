@@ -36,11 +36,13 @@ void Scene1::Init()
 	m_cMap = new CMap();
 	m_cMap->Init(Application::GetInstance().GetScreenHeight(), Application::GetInstance().GetScreenWidth(), 32);
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
+	apples = new AppleSpawning();
+	apples->Init();
 }
 
 void Scene1::InitFSM()
 {
-	RandomInt = RandomInteger(500, 700);
+	RandomInt = RandomInteger(30, 70);
 	TempRandomInt = RandomInt;
 	castleState = CLOSE;
 	doorPos.pos.Set(30, 300, 1);
@@ -56,7 +58,7 @@ void Scene1::InitFSM()
 	guard2.stopAnimation = false;
 	guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 
-	for (int i = 1; i < 3; i++)
+	/*for (int i = 1; i < 3; i++)
 	{
 		int randY = RandomInteger(100, 200) * i;
 		int randX = RandomInteger(280, 300) * i;
@@ -67,15 +69,20 @@ void Scene1::InitFSM()
 	{
 		int randTreePosition = RandomInteger(-130, 10);
 		int randTree = RandomInteger(0, treePositions.size() - 1);
-		applePositions1.timer = RandomInteger(300, 800);
+		applePositions1.timer = RandomInteger(20, 50);
 		applePositions1.spawned = false;
 		applePositions1.position.pos.x = treePositions[randTree].pos.x - randTreePosition;
 		applePositions1.position.pos.y = treePositions[randTree].pos.y + 90;
 		applePositions1.newPosition.pos.Set(applePositions1.position.pos.x, applePositions1.position.pos.y - 80, 1);
 		applePositions1.appleStates = SPAWNING;
+		applePositions1.appleMesh = new ChangeMesh();
+		applePositions1.probability = 50;
+		applePositions1.randomProb = RandomInteger(0, 100);
+		applePositions1.probabilityCountDown = applePositions1.randomProb;
+		applePositions1.appleMesh->SetNewMesh(meshList[GEO_APPLES]);
 		applePositions1.despawn = 500;
 		applePositions.push_back(applePositions1);
-	}
+	}*/
 
 	//Heal Point data
 	healpointState = HEAL;
@@ -109,29 +116,48 @@ void Scene1::MapUpdate(double dt)
 
 void Scene1::SpawnAppleFSMUpdate(double dt)
 {
-	for (int i = 0; i < applePositions.size(); i++)
-	{
-		applePositions[i].timer -= dt;
-		//cout << applePositions[i].timer << endl;
-		//cout << i << " " << applePositions[i].newPosition.pos.y << endl;
-		if (applePositions[i].timer <= 0 && !applePositions[i].spawned)
-		{
-			applePositions[i].spawned = true;
-			/**/
-		}
-		if (applePositions[i].spawned)
-		{
-			if (applePositions[i].position.pos.y > applePositions[i].newPosition.pos.y)
-				applePositions[i].position.pos.y--;
-			else
-			applePositions[i].despawn-=0.0001 * dt;
-			cout << i << " " << applePositions[i].despawn << endl;
-		}
-		if (applePositions[i].despawn <= 0)
-		{
-			applePositions[i].spawned = false;
-		}
-	}
+	//for (int i = 0; i < applePositions.size(); i++)
+	//{
+	//	applePositions[i].timer -= dt;
+	//	//cout << applePositions[i].timer << endl;
+	//	//cout << i << " " << applePositions[i].newPosition.pos.y << endl;
+	//	if (applePositions[i].timer <= 0 && !applePositions[i].spawned)
+	//	{
+	//		applePositions[i].spawned = true;
+	//		/**/
+	//	}
+	//	if (applePositions[i].spawned)
+	//	{
+	//		if (applePositions[i].position.pos.y > applePositions[i].newPosition.pos.y)
+	//			applePositions[i].position.pos.y--;
+	//		 
+	//		if (applePositions[i].randomProb <= applePositions[i].probability)
+	//		{
+	//			applePositions[i].despawn -=  dt;
+	//			//cout << i << " " << applePositions[i].despawn << endl;
+	//		}
+	//		else
+	//		{
+	//			applePositions[i].probabilityCountDown -= dt * 3;
+	//			if (applePositions[i].probabilityCountDown <= 0)
+	//			{
+	//				applePositions[i].randomProb = RandomInteger(0, 100);
+	//				applePositions[i].probabilityCountDown = applePositions[i].randomProb;
+	//			}
+	//		}
+	//	}
+	//	if (applePositions[i].spawned && applePositions[i].despawn < 250)
+	//	{
+	//		applePositions[i].appleMesh->SetNewMesh(meshList[GEO_ROTTENAPPLE]);
+	//	}
+	//	if (applePositions[i].despawn <= 0)
+	//	{
+	//		applePositions[i].spawned = false;
+	//		applePositions[i].randomProb = RandomInteger(0, 100);
+	//		applePositions[i].probabilityCountDown = applePositions[i].randomProb;
+	//		applePositions[i].appleMesh->SetNewMesh(meshList[GEO_APPLES]);
+	//	}
+	//}
 }
 
 void Scene1::CastleFSMUpdate(double dt)
@@ -254,7 +280,7 @@ void Scene1::CastleFSMUpdate(double dt)
 			{
 				guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 				guard2.stopAnimation = true;
-				RandomInt -= dt*0.001;
+				RandomInt -= dt;
 			}
 		}
 		break;
@@ -303,7 +329,7 @@ void Scene1::CastleFSMUpdate(double dt)
 			}
 			else
 			{
-				RandomInt -= dt*0.01;
+				RandomInt -= dt;
 			}
 		}
 		break;
@@ -436,13 +462,12 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 void Scene1::Update(double dt)
 {
 	SceneBase::Update(dt);
+	apples->UpdateApplesFSM(dt);
 	CastleFSMUpdate(dt);
-	SpawnAppleFSMUpdate(dt);
 	HealPointFSMUpdate(dt);
 	KingSlimeFSMUpdate(dt);
 
 	fps = (float)(1.f / dt);
-
 }
 
 int Scene1::RandomInteger(int lowerLimit, int upperLimit)
@@ -458,16 +483,39 @@ void Scene1::RenderFSM()
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.pos.x, doorPos.pos.y, false);
 
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
-	for (int i = 0; i < applePositions.size(); i++)
+	/*for (int i = 0; i < applePositions.size(); i++)
 	{
 		if (applePositions[i].spawned)
 		{
-			Render2DMeshWScale(meshList[GEO_APPLES], false, 30, 30, applePositions[i].position.pos.x, applePositions[i].position.pos.y, false);
+			Render2DMeshWScale(applePositions[i].appleMesh->GetNewMesh(), false, 30, 30, applePositions[i].position.pos.x, applePositions[i].position.pos.y, false);
 		}
-	}
-	for (int i = 0; i < treePositions.size(); i++)
+	}*/
+	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{
-		Render2DMeshWScale(meshList[GEO_TREE], false, 170, 170, treePositions[i].pos.x, treePositions[i].pos.y, false);
+		switch (apples->GetAppleVec()[i].appleStates)
+		{
+		case AppleSpawning::SPAWNING:
+			apples->GetAppleVec()[i].appleMesh->SetNewMesh(meshList[GEO_APPLES]);
+			break;
+		case AppleSpawning::SPAWNED:
+			apples->GetAppleVec()[i].appleMesh->SetNewMesh(meshList[GEO_APPLES]);
+			break;
+		case AppleSpawning::ROTTING:
+			apples->GetAppleVec()[i].appleMesh->SetNewMesh(meshList[GEO_ROTTENAPPLE]);
+			break;
+		case AppleSpawning::DECAYED:
+			apples->GetAppleVec()[i].appleMesh->SetNewMesh(meshList[GEO_DECAYAPPLE]);
+			break;
+		}
+		if (apples->GetAppleVec()[i].spawned)
+		{
+			Render2DMeshWScale(apples->GetAppleVec()[i].appleMesh->GetNewMesh(), false, 30, 30, apples->GetAppleVec()[i].position.pos.x, apples->GetAppleVec()[i].position.pos.y, false);
+		}
+		cout << i << " " << apples->GetAppleVec()[i].randomProb << "   " << apples->GetAppleVec()[i].probability << endl;
+	}
+	for (int i = 0; i < apples->GetTreeVec().size(); i++)
+	{
+		Render2DMeshWScale(meshList[GEO_TREE], false, 170, 170, apples->GetTreeVec()[i].pos.x, apples->GetTreeVec()[i].pos.y, false);
 	}
 
 	//Render HealPoint
@@ -488,17 +536,16 @@ void Scene1::RenderFSM()
 		else
 			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.pos.x, KSpos.pos.y, false);
 	}
-
 }
 
 void Scene1::RenderFSMText()
 {
 	std::ostringstream ss;
 
-	ss.str("");
+	/*ss.str("");
 	ss << "Spawning " << applePositions.size() << " apples";
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 450, 3);
-
+	*/
 	//On screen text
 	ss.str("");
 	ss.precision(5);
@@ -582,31 +629,39 @@ void Scene1::RenderFSMText()
 	}
 	ss.str("");
 	ss << "PP: " << PP;
+	ostringstream oss;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 50);
+
 	int y = 0;
-	for (int i = 0; i < applePositions.size(); i++)
+	int x = 300;
+	ostringstream oss2;
+	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{
+		x += 20;
 		ss.str("");
-		y += 20;
-		if (applePositions[i].timer > 0)
-			ss << "Apple " << i + 1 << " " << applePositions[i].timer;
-		if (applePositions[i].timer <= 0 && applePositions[i].despawn > 250)
-			ss << "Apple " << i + 1 << " Spawned";
-		if (applePositions[i].despawn < 250)
-			ss << "Apple " << i + 1 << " Rotting";
-		if (applePositions[i].despawn <= 0)
-		{
-			ss << "Apple " << i + 1 << " Despawned";
-			int randTreePosition = RandomInteger(-130, 10);
-			int randTree = RandomInteger(0, treePositions.size() - 1);
-			applePositions[i].timer = RandomInteger(300, 800);
-			applePositions[i].position.pos.x = treePositions[randTree].pos.x - randTreePosition;
-			applePositions[i].position.pos.y = treePositions[randTree].pos.y + 90;
-			applePositions[i].newPosition.pos.Set(applePositions[i].position.pos.x, applePositions[i].position.pos.y - 80, 1);
-			applePositions[i].despawn = 500;
-		}
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 500, y);
+
+		if (apples->GetAppleVec()[i].timer > 0)
+			ss << "Apple " << i << " " << apples->GetAppleVec()[i].timer;
+
+		if (apples->GetAppleVec()[i].spawned && apples->GetAppleVec()[i].despawn> 10)
+			ss << "Apple " << i << " Spawned";
+
+		if (apples->GetAppleVec()[i].appleStates == AppleSpawning::ROTTING)
+			ss << "Apple " << i << " Rotting";
+
+		if (apples->GetAppleVec()[i].appleStates == AppleSpawning::DECAYED)
+			ss << "Apple " << i << " Decaying";
+		
+		oss2.str("");
+		oss2 << "Rot Probability " << apples->GetAppleVec()[i].probability;
+
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 100, x);
+		RenderTextOnScreen(meshList[GEO_TEXT], oss2.str(), Color(0, 0, 1), 20, 400, x);
 	}
+	ss.str("");
+	ss << apples->countNoRot << " " << apples->countRot;
+
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 20, 300);
 }
 
 void Scene1::RenderMap()
@@ -657,6 +712,7 @@ void Scene1::Exit()
 		if(meshList[i])
 			delete meshList[i];
 	}
+	delete apples;
 	glDeleteProgram(m_programID);
 	glDeleteVertexArrays(1, &m_vertexArrayID);
 }

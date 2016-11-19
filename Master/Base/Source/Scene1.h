@@ -7,7 +7,9 @@
 #include "GameObject.h"
 #include "CharacterData.h"
 #include "ChangeMesh.h"
+#include "AppleSpawning.h"
 
+class AppleSpawning;
 class Scene1 : public SceneBase
 {
 public:
@@ -46,8 +48,12 @@ public:
 		MOVINGIN,
 		IDLING,
 		ATTACKING,
+		MOVINGL,
+		MOVINGUP,
+		MOVINGR,
+		MOVINGD,
 	};
-	enum ApplesStates
+	enum ApplesStatess
 	{
 		SPAWNING,
 		SPAWNED,
@@ -62,12 +68,16 @@ public:
 	};
 	struct Apples
 	{
-		ApplesStates appleStates;
+		ApplesStatess appleStates;
+		ChangeMesh *appleMesh;
 		Vertex position;
-		int timer;
+		float timer;
 		bool spawned;
 		Vertex newPosition;
 		int despawn;
+		int probability;
+		int randomProb;
+		float probabilityCountDown;
 	};
 	enum HealPoint
 	{
@@ -86,7 +96,7 @@ public:
 	};
 
 private:
-	int RandomInt;
+	float RandomInt;
 	int TempRandomInt;
 	bool playCastleAnim = false;
 	CMap* m_cMap;	// Handle to the tilemaps
@@ -95,6 +105,8 @@ private:
 	Vector3 guard2Scale;
 	bool guardMoveLeft,stopGuard2Anim;
 	Guard guardState;
+
+	AppleSpawning* apples;
 
 	ChangeMesh *guard2Mesh;
 	Guards guard1, guard2;
