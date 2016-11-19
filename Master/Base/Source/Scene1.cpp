@@ -37,53 +37,12 @@ void Scene1::Init()
 	m_cMap->Init(Application::GetInstance().GetScreenHeight(), Application::GetInstance().GetScreenWidth(), 32);
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
 	apples = new AppleSpawning();
+	castlenguards = new CastlenGuards();
 	apples->Init();
 }
 
 void Scene1::InitFSM()
 {
-	RandomInt = RandomInteger(30, 70);
-	TempRandomInt = RandomInt;
-	castleState = CLOSE;
-	doorPos.pos.Set(30, 300, 1);
-
-	guard1.guardMesh = new ChangeMesh();
-	guard1.position.pos.Set(155, 320, 1);
-	guard1.scale.Set(0.1, 0.1, 1);
-	guard1.stopAnimation = false;
-
-	guard2.guardMesh = new ChangeMesh();
-	guard2.position.pos.Set(162, 360, 1);
-	guard2.scale.Set(0.1, 0.1, 1);
-	guard2.stopAnimation = false;
-	guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-
-	/*for (int i = 1; i < 3; i++)
-	{
-		int randY = RandomInteger(100, 200) * i;
-		int randX = RandomInteger(280, 300) * i;
-		treePosition1.pos.Set(randX, randY, 1);
-		treePositions.push_back(treePosition1);
-	}
-	for (int i = 0; i < RandomInteger(1, 5); i++)
-	{
-		int randTreePosition = RandomInteger(-130, 10);
-		int randTree = RandomInteger(0, treePositions.size() - 1);
-		applePositions1.timer = RandomInteger(20, 50);
-		applePositions1.spawned = false;
-		applePositions1.position.pos.x = treePositions[randTree].pos.x - randTreePosition;
-		applePositions1.position.pos.y = treePositions[randTree].pos.y + 90;
-		applePositions1.newPosition.pos.Set(applePositions1.position.pos.x, applePositions1.position.pos.y - 80, 1);
-		applePositions1.appleStates = SPAWNING;
-		applePositions1.appleMesh = new ChangeMesh();
-		applePositions1.probability = 50;
-		applePositions1.randomProb = RandomInteger(0, 100);
-		applePositions1.probabilityCountDown = applePositions1.randomProb;
-		applePositions1.appleMesh->SetNewMesh(meshList[GEO_APPLES]);
-		applePositions1.despawn = 500;
-		applePositions.push_back(applePositions1);
-	}*/
-
 	//Heal Point data
 	healpointState = HEAL;
 	PP = 3;
@@ -116,48 +75,7 @@ void Scene1::MapUpdate(double dt)
 
 void Scene1::SpawnAppleFSMUpdate(double dt)
 {
-	//for (int i = 0; i < applePositions.size(); i++)
-	//{
-	//	applePositions[i].timer -= dt;
-	//	//cout << applePositions[i].timer << endl;
-	//	//cout << i << " " << applePositions[i].newPosition.pos.y << endl;
-	//	if (applePositions[i].timer <= 0 && !applePositions[i].spawned)
-	//	{
-	//		applePositions[i].spawned = true;
-	//		/**/
-	//	}
-	//	if (applePositions[i].spawned)
-	//	{
-	//		if (applePositions[i].position.pos.y > applePositions[i].newPosition.pos.y)
-	//			applePositions[i].position.pos.y--;
-	//		 
-	//		if (applePositions[i].randomProb <= applePositions[i].probability)
-	//		{
-	//			applePositions[i].despawn -=  dt;
-	//			//cout << i << " " << applePositions[i].despawn << endl;
-	//		}
-	//		else
-	//		{
-	//			applePositions[i].probabilityCountDown -= dt * 3;
-	//			if (applePositions[i].probabilityCountDown <= 0)
-	//			{
-	//				applePositions[i].randomProb = RandomInteger(0, 100);
-	//				applePositions[i].probabilityCountDown = applePositions[i].randomProb;
-	//			}
-	//		}
-	//	}
-	//	if (applePositions[i].spawned && applePositions[i].despawn < 250)
-	//	{
-	//		applePositions[i].appleMesh->SetNewMesh(meshList[GEO_ROTTENAPPLE]);
-	//	}
-	//	if (applePositions[i].despawn <= 0)
-	//	{
-	//		applePositions[i].spawned = false;
-	//		applePositions[i].randomProb = RandomInteger(0, 100);
-	//		applePositions[i].probabilityCountDown = applePositions[i].randomProb;
-	//		applePositions[i].appleMesh->SetNewMesh(meshList[GEO_APPLES]);
-	//	}
-	//}
+	
 }
 
 void Scene1::CastleFSMUpdate(double dt)
@@ -169,175 +87,20 @@ void Scene1::CastleFSMUpdate(double dt)
 		castle->Update(dt);
 		castle->m_anim->animActive = true;
 	}
-	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(guard1.guardMesh->GetNewMesh());
-	if (guards && !guard1.stopAnimation)
+	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(castlenguards->guard1.guardMesh->GetNewMesh());
+	if (guards && !castlenguards->guard1.stopAnimation)
 	{
 			guards->Update(dt);
 			guards->m_anim->animActive = true;
 	}
-	SpriteAnimation *guards2 = dynamic_cast<SpriteAnimation*>(guard2.guardMesh->GetNewMesh());
-	if (guards2 && !guard2.stopAnimation)
+	SpriteAnimation *guards2 = dynamic_cast<SpriteAnimation*>(castlenguards->guard2.guardMesh->GetNewMesh());
+	if (guards2 && !castlenguards->guard2.stopAnimation)
 	{
 		guards2->Update(dt);
 		guards2->m_anim->animActive = true;
 	}
-	//Random another number for next state
-	if (RandomInt <= 0)
-	{
-		RandomInt = RandomInteger(300, 400);
-		TempRandomInt = RandomInt;
-		addedCount = false;
-		if (castleState == CLOSE)
-		{
-			//Rest guard positions
-			if (guard1.position.pos.y != 320 || guard2.position.pos.x != 162)
-			{
-				guard1.position.pos.y = 320;
-				guard2.position.pos.y = 360;
-				guard2.position.pos.x = 162;
-			}
-		}
-	}
-	//If even number, castle is open
-	if (TempRandomInt % 2 == 0)
-	{
-		castleState = OPEN;
-		if (!addedCount)
-		{
-			open++;
-			addedCount = true;
-		}
-	}
-	//Odd number castle is closed
-	else
-	{
-		castleState = CLOSE;
-		if (!addedCount)
-		{
-			close++;
-			addedCount = true;
-		}
-	}
-	switch (castleState)
-	{
-	case Scene1::OPEN:
-		guardState = MOVINGOUT;
-		if (doorPos.pos.y <= 350)
-		{
-			doorPos.pos.y++;
-		}
-		break;
-	case Scene1::CLOSE:
-		guardState = MOVINGIN;
-		break;
-	default:
-		break;
-	}
-	switch (guardState)
-	{
-	case Scene1::MOVINGOUT:
-		if (guard2.scale.x <= 30)
-		{
-			guard2.scale.x++;
-			guard2.position.pos.x -= 0.5;
-			guard2.scale.y++;
-
-			if (guard1.scale.x <= 30)
-			{
-				guard1.scale.x++;
-				guard1.scale.y++;
-
-				guard1.position.pos.x -= 0.5;
-			}
-		}
-		if (guard1.position.pos.y >= 270)
-		{
-			guard1.position.pos.y -= 0.5;
-			guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-		}
-		else
-		{
-			guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
-			if (guard1.position.pos.x >= 25)
-				guard1.position.pos.x--;
-			else
-			{
-				guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-				guard1.stopAnimation = true;
-			}
-		}
-		if (guard2.position.pos.y >= 270)
-		{
-			guard2.position.pos.y -= 0.5;
-			guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-		}
-		else
-		{
-			guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
-			if (guard2.position.pos.x <= 250)
-				guard2.position.pos.x++;
-			else
-			{
-				guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-				guard2.stopAnimation = true;
-				RandomInt -= dt;
-			}
-		}
-		break;
-	case Scene1::MOVINGIN:
-		if (guard1.position.pos.x <= 140)
-		{
-			guard1.position.pos.x++;
-			guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
-			guard1.stopAnimation = false;
-		}
-		else if (guard1.position.pos.y <= 350)
-		{
-			guard1.position.pos.y++;
-			guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
-		}
-
-		if (guard1.position.pos.x >= 80)
-		{
-			if (guard2.position.pos.x >= 145)
-			{
-				guard2.position.pos.x--;
-				guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
-				guard2.stopAnimation = false;
-			}
-			else if (guard2.position.pos.y <= 340)
-			{
-				guard2.position.pos.y++;
-				guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
-			}
-			else if (doorPos.pos.y >= 300)
-			{
-				doorPos.pos.y--;
-
-				if (guard1.scale.x >= 0.01)
-				{
-					guard1.scale.x -= 0.5;
-					guard1.scale.y -= 0.5;
-					guard1.position.pos.x += 0.3;
-				}
-				if (guard2.scale.x >= 0.01)
-				{
-					guard2.scale.x -= 0.5;
-					guard2.scale.y -= 0.5;
-					guard2.position.pos.x += 0.3;
-				}
-			}
-			else
-			{
-				RandomInt -= dt;
-			}
-		}
-		break;
-	case Scene1::IDLING:
-		break;
-	default:
-		break;
-	}
+	castlenguards->UpdateCastlenGuards(dt);
+	cout << castlenguards->guard1.position.pos.x << "  " << castlenguards->guard1.position.pos.y << endl;
 }
 
 void Scene1::HealPointFSMUpdate(double dt)
@@ -435,11 +198,13 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 	{
 		Vector3 d;
 
-		for (int i = 0; i < applePositions.size(); i++)
+		for (int i = 0; i < apples->GetAppleVec().size(); i++)
 		{
-			d.x = applePositions[i].position.pos.x - KSpos.pos.x;
-			d.y = applePositions[i].position.pos.y - KSpos.pos.y;
-
+			if (apples->GetAppleVec()[i].spawned)
+			{
+				d.x = apples->GetAppleVec()[i].position.pos.x - KSpos.pos.x;
+				d.y = apples->GetAppleVec()[i].position.pos.y - KSpos.pos.y;
+			}
 			if (d.IsZero())
 			{
 				return;
@@ -452,7 +217,7 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 			float distanceToCheck = 0.04f * p_speed;
 			if (d.LengthSquared() <= distanceToCheck * distanceToCheck)
 			{
-				applePositions[i].spawned = false;
+				apples->GetAppleVec()[i].spawned = false;
 				Hunger = 100;
 			}
 		}
@@ -477,19 +242,59 @@ int Scene1::RandomInteger(int lowerLimit, int upperLimit)
 
 void Scene1::RenderFSM()
 {
-	Render2DMeshWScale(guard1.guardMesh->GetNewMesh(), false, guard1.scale.x, guard1.scale.y, guard1.position.pos.x, guard1.position.pos.y, false);
-	Render2DMeshWScale(guard2.guardMesh->GetNewMesh(), false, guard2.scale.x, guard2.scale.y, guard2.position.pos.x, guard2.position.pos.y, false);
+	switch (castlenguards->guard1.guardState)
+	{
+	case CastlenGuards::IDLING:
+		cout << "IDLING" << endl;
 
-	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, doorPos.pos.x, doorPos.pos.y, false);
+		castlenguards->guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		break;
+	case CastlenGuards::MOVINGD:
+		cout << "DOWN" << endl;
+
+		castlenguards->guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		break;
+	case CastlenGuards::MOVINGUP:
+		cout << "UP" << endl;
+
+		castlenguards->guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
+		break;
+	case CastlenGuards::MOVINGL:
+		cout << "LEFT" << endl;
+
+		castlenguards->guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
+		break;
+	case CastlenGuards::MOVINGR:
+		cout << "RIGHT" << endl;
+
+		castlenguards->guard1.guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
+		break;
+	}
+	switch (castlenguards->guard2.guardState)
+	{
+	case CastlenGuards::IDLING:
+		castlenguards->guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		break;
+	case CastlenGuards::MOVINGD:
+		castlenguards->guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		break;
+	case CastlenGuards::MOVINGUP:
+		castlenguards->guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
+		break;
+	case CastlenGuards::MOVINGL:
+		castlenguards->guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
+		break;
+	case CastlenGuards::MOVINGR:
+		castlenguards->guard2.guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
+		break;
+	}
+	Render2DMeshWScale(castlenguards->guard1.guardMesh->GetNewMesh(), false, castlenguards->guard1.scale.x, castlenguards->guard1.scale.y, castlenguards->guard1.position.pos.x, castlenguards->guard1.position.pos.y, false);
+	Render2DMeshWScale(castlenguards->guard2.guardMesh->GetNewMesh(), false, castlenguards->guard2.scale.x, castlenguards->guard2.scale.y, castlenguards->guard2.position.pos.x, castlenguards->guard2.position.pos.y, false);
+
+	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, castlenguards->doorPos.pos.x, castlenguards->doorPos.pos.y, false);
 
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
-	/*for (int i = 0; i < applePositions.size(); i++)
-	{
-		if (applePositions[i].spawned)
-		{
-			Render2DMeshWScale(applePositions[i].appleMesh->GetNewMesh(), false, 30, 30, applePositions[i].position.pos.x, applePositions[i].position.pos.y, false);
-		}
-	}*/
+	
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{
 		switch (apples->GetAppleVec()[i].appleStates)
@@ -511,13 +316,14 @@ void Scene1::RenderFSM()
 		{
 			Render2DMeshWScale(apples->GetAppleVec()[i].appleMesh->GetNewMesh(), false, 30, 30, apples->GetAppleVec()[i].position.pos.x, apples->GetAppleVec()[i].position.pos.y, false);
 		}
-		cout << i << " " << apples->GetAppleVec()[i].randomProb << "   " << apples->GetAppleVec()[i].probability << endl;
+		//cout << i << " " << apples->GetAppleVec()[i].randomProb << "   " << apples->GetAppleVec()[i].probability << endl;
 	}
 	for (int i = 0; i < apples->GetTreeVec().size(); i++)
 	{
 		Render2DMeshWScale(meshList[GEO_TREE], false, 170, 170, apples->GetTreeVec()[i].pos.x, apples->GetTreeVec()[i].pos.y, false);
 	}
 
+	
 	//Render HealPoint
 	if (healpointState == HEAL)
 		Render2DMeshWScale(meshList[GEO_HEAL_HEAL], false, 10, 10, healpointPos.pos.x, healpointPos.pos.y, false);
@@ -552,27 +358,27 @@ void Scene1::RenderFSMText()
 	ss << "FPS: " << fps;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 0), 30, 0, 0);
 	ss.str("");
-	ss << "Open: " << open << " Close: " << close;
+	ss << "Open: " << castlenguards->open << " Close: " << castlenguards->close;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 520);
 
-	switch (castleState)
+	switch (castlenguards->castleState)
 	{
-	case OPEN:
+	case CastlenGuards::OPEN:
 		ss.str("");
 		ss << "OPEN";
 		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
 		break;
-	case CLOSE:
+	case CastlenGuards::CLOSE:
 		ss.str("");
 		ss << "CLOSE";
 		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
 		break;
 	}
 	ss.str("");
-	ss << "To next random state " << RandomInt;
+	ss << "To next random state " << castlenguards->RandomInt;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 570);
 	ss.str("");
-	ss << "Previous random state number " << TempRandomInt;
+	ss << "Previous random state number " << castlenguards->TempRandomInt;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 585);
 
 	ss.str("");

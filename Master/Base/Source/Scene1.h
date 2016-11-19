@@ -8,6 +8,7 @@
 #include "CharacterData.h"
 #include "ChangeMesh.h"
 #include "AppleSpawning.h"
+#include "CastlenGuards.h"
 
 class AppleSpawning;
 class Scene1 : public SceneBase
@@ -96,26 +97,12 @@ public:
 	};
 
 private:
-	float RandomInt;
-	int TempRandomInt;
 	bool playCastleAnim = false;
 	CMap* m_cMap;	// Handle to the tilemaps
-	Castle castleState;
-	Vertex doorPos,guard2Pos;
-	Vector3 guard2Scale;
-	bool guardMoveLeft,stopGuard2Anim;
-	Guard guardState;
 
 	AppleSpawning* apples;
+	CastlenGuards* castlenguards;
 
-	ChangeMesh *guard2Mesh;
-	Guards guard1, guard2;
-	Vertex treePosition1;
-	vector<Vertex>treePositions;
-	vector<Apples>applePositions;
-	Apples applePositions1;
-	int close = 0;
-	int open = 0;
 	bool addedCount = false;
 
 	//Heal Point
