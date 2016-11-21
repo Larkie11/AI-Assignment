@@ -241,7 +241,6 @@ int Scene1::RandomInteger(int lowerLimit, int upperLimit)
 
 void Scene1::RenderFSM()
 {
-
 	for (int i = 0; i < castlenguards->guardList.size(); i++)
 	{
 		switch (castlenguards->guardList[i].guardState)
@@ -270,6 +269,11 @@ void Scene1::RenderFSM()
 			//cout << "RIGHT" << endl;
 
 			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
+			break;
+		case Guards::GUARDING:
+			//cout << "RIGHT" << endl;
+
+			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		}
 		Render2DMeshWScale(castlenguards->guardList[i].guardMesh->GetNewMesh(), false, castlenguards->guardList[i].scale.x, castlenguards->guardList[i].scale.y, castlenguards->guardList[i].position.x, castlenguards->guardList[i].position.y, false);
@@ -370,6 +374,39 @@ void Scene1::RenderFSMText()
 	ss.str("");
 	ss << "KS Hunger: " << Hunger;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 200);
+	for (int i = 0; i < castlenguards->guardList.size(); i++)
+	{
+		switch (castlenguards->guardList[i].guardState)
+		{
+		case Guards::IDLING:
+			ss.str("");
+			ss << "IDLING";
+			break;
+		case Guards::MOVINGD:
+			//cout << "DOWN" << endl;
+			ss.str("");
+			ss << "DOWN";
+			break;
+		case Guards::MOVINGUP:
+			ss.str("");
+			ss << "UP";
+			break;
+		case Guards::MOVINGL:
+			ss.str("");
+			ss << "LEFT";
+			break;
+		case Guards::MOVINGR:
+			ss.str("");
+			ss << "RIGHT";
+			break;
+		case Guards::GUARDING:
+			ss.str("");
+			ss << "GUARD";
+			break;
+		}
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, castlenguards->guardList[i].position.x - 12, castlenguards->guardList[i].position.y - 16);
+
+	}
 
 	switch (healpointState)
 	{
@@ -421,11 +458,35 @@ void Scene1::RenderFSMText()
 	}
 	ss.str("");
 	ss << "PP: " << PP;
+	int x = 0;
 	ostringstream oss;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 50);
+	for (int i = 0; i < apples->GetAppleVec().size(); i++)
+	{
+		ss.str("");
+		x -= 3;
+		switch (apples->GetAppleVec()[i].appleStates)
+		{
+		case  Apples::SPAWNING:
+			ss << "Apple " << i << " spawning " << apples->GetAppleVec()[i].timer;
+			break;
+		case Apples::SPAWNED:
+			ss << "Apple " << i << " spawned " << apples->GetAppleVec()[i].despawn;
+			break;
+		case Apples::ROTTING:
+			ss << "Apple " << i << " rotting " << apples->GetAppleVec()[i].timer;
+			break;
+		case Apples::DECAYED:
+			ss << "Apple " << i << " decaying " << apples->GetAppleVec()[i].timer;
+			break;
+		default:
+			break;
+		}
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, apples->GetAppleVec()[i].position.x-30, apples->GetAppleVec()[i].position.y - x);
 
+	}
 	int y = 0;
-	int x = 300;
+	
 	ostringstream oss2;
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{
@@ -447,7 +508,6 @@ void Scene1::RenderFSMText()
 		oss2.str("");
 		oss2 << "Rot Probability " << apples->GetAppleVec()[i].probability;
 
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 100, x);
 		RenderTextOnScreen(meshList[GEO_TEXT], oss2.str(), Color(0, 0, 1), 20, 400, x);
 	}
 	ss.str("");
@@ -455,6 +515,7 @@ void Scene1::RenderFSMText()
 
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 20, 300);
 }
+
 
 void Scene1::RenderMap()
 {

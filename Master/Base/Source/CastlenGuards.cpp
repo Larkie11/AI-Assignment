@@ -95,7 +95,7 @@ void CastlenGuards::UpdateCastlenGuards(double dt)
 			}
 			if (guardList[i].wayPointID >= guardList[i].GuardWaypointsOut.size() - 1)
 			{
-				guardList[i].guardState = Guards::IDLING;
+				guardList[i].guardState = Guards::GUARDING;
 				guardList[i].stopAnimation = true;
 				RandomInt -= dt;
 			}

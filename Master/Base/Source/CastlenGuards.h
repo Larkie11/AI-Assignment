@@ -24,6 +24,7 @@ struct Guards
 		MOVINGUP,
 		MOVINGR,
 		MOVINGD,
+		GUARDING,
 	};
 	Vector3 position;
 	Vector3 scale;

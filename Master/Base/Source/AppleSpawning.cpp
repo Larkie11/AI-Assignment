@@ -86,7 +86,7 @@ void AppleSpawning::UpdateApplesFSM(double dt)
 			appleVec[i].spawned = true;
 			/**/
 		}
-		if (appleVec[i].spawned)
+		if (appleVec[i].spawned && appleVec[i].despawn > 10)
 		{
 			appleVec[i].appleStates = Apples::SPAWNED;
 
@@ -100,7 +100,6 @@ void AppleSpawning::UpdateApplesFSM(double dt)
 				{
 					countRot++;
 					addCount = true;
-					//appleVec[i].appleStates = ROTTING;
 				}
 			}
 			if (appleVec[i].randomProb > appleVec[i].probability)
@@ -109,7 +108,6 @@ void AppleSpawning::UpdateApplesFSM(double dt)
 				{
 					countNoRot++;
 					addCount = true;
-					//appleVec[i].appleStates = DECAYED;
 				}
 			}
 		}
