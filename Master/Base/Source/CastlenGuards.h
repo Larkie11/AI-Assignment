@@ -3,19 +3,18 @@
 #include "Vector3.h"
 #include "ChangeMesh.h"
 #include "MyMath.h"
+#include <vector>
 
-class CastlenGuards
+using std::vector;
+enum Castle
 {
-public:
-	CastlenGuards();
-	virtual ~CastlenGuards();
-	enum Castle
-	{
-		OPEN,
-		CLOSE,
-		DEFENCE,
-	};
-	enum Guard
+	OPEN,
+	CLOSE,
+	DEFENCE,
+};
+struct Guards
+{
+	typedef enum Guard
 	{
 		MOVINGOUT,
 		MOVINGIN,
@@ -26,14 +25,30 @@ public:
 		MOVINGR,
 		MOVINGD,
 	};
-	struct Guards
-	{
-		Vertex position;
-		Vector3 scale;
-		bool stopAnimation;
-		ChangeMesh* guardMesh;
-		Guard guardState;
-	};
+	Vector3 position;
+	Vector3 scale;
+	bool stopAnimation;
+	ChangeMesh* guardMesh;
+	Guard guardState;
+	vector<Vector3>GuardWaypointsOut;
+	vector<Vector3>GuardWaypointsIn;
+
+	Vector3 nextPoint;
+	int wayPointID;
+	bool changePos = false;
+};
+class CastlenGuards
+{
+public:
+	CastlenGuards();
+	virtual ~CastlenGuards();
+	
+	
+	Vector3 position1;
+	vector<Guards> guardList;
+	bool arrived = false;
+	Vector3 direction;
+	float distance = 0;
 	void UpdateCastlenGuards(double dt);
 	float RandomInt;
 	int TempRandomInt;
@@ -41,7 +56,6 @@ public:
 	Vertex doorPos, guard2Pos;
 	Vector3 guard2Scale;
 	bool guardMoveLeft, stopGuard2Anim;
-	Guard guardState;
 	Guards guard1, guard2;
 	int close = 0;
 	int open = 0;

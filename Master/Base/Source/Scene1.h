@@ -36,50 +36,7 @@ public:
 	void SpawnAppleFSMUpdate(double dt);
 	void HealPointFSMUpdate(double dt);
 	void KingSlimeFSMUpdate(double dt);
-
-	enum Castle
-	{
-		OPEN,
-		CLOSE,
-		DEFENCE,
-	};
-	enum Guard
-	{
-		MOVINGOUT,
-		MOVINGIN,
-		IDLING,
-		ATTACKING,
-		MOVINGL,
-		MOVINGUP,
-		MOVINGR,
-		MOVINGD,
-	};
-	enum ApplesStatess
-	{
-		SPAWNING,
-		SPAWNED,
-		ROTTING,
-	};
-	struct Guards
-	{ 
-		Vertex position;
-		Vector3 scale;
-		bool stopAnimation;
-		ChangeMesh* guardMesh;
-	};
-	struct Apples
-	{
-		ApplesStatess appleStates;
-		ChangeMesh *appleMesh;
-		Vertex position;
-		float timer;
-		bool spawned;
-		Vertex newPosition;
-		int despawn;
-		int probability;
-		int randomProb;
-		float probabilityCountDown;
-	};
+	
 	enum HealPoint
 	{
 		IDLE,

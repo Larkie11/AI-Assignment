@@ -5,37 +5,42 @@
 
 using std::vector;
 
-class AppleSpawning
+
+
+struct Apples
 {
-public:
-	enum ApplesStates
+	
+	typedef enum ApplesStates
 	{
 		SPAWNING,
 		SPAWNED,
 		ROTTING,
 		DECAYED,
-	};
-	struct Apples
-	{
-		ApplesStates appleStates;
-		ChangeMesh *appleMesh;
-		Vertex position;
-		float timer;
-		bool spawned;
-		Vertex newPosition;
-		float despawn;
-		int probability;
-		int randomProb;
-		float probabilityCountDown;
-		bool notRotted = false;
-	};
+	}; 
+	ApplesStates appleStates;
 
-	vector<AppleSpawning::Apples> GetAppleVec();
+	ChangeMesh *appleMesh;
+	Vector3 position;
+	float timer;
+	bool spawned;
+	Vector3 newPosition;
+	float despawn;
+	int probability;
+	int randomProb;
+	float probabilityCountDown;
+	bool notRotted = false;
+};
+
+class AppleSpawning
+{
+public:
+	vector<Apples> GetAppleVec();
 	vector<Vertex>GetTreeVec();
 	void Init();
 	void InitApples();
 	void InitTrees();
 	void RespawnApples();
+	void GetAppleState();
 	void UpdateApplesFSM(double dt);
 	AppleSpawning();
 	virtual ~AppleSpawning();
