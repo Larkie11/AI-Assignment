@@ -33,6 +33,7 @@ struct Guards
 	Guard guardState;
 	vector<Vector3>GuardWaypointsOut;
 	vector<Vector3>GuardWaypointsIn;
+	Vector3 lastsavedposition;
 
 	Vector3 nextPoint;
 	int wayPointID;
@@ -43,6 +44,8 @@ class CastlenGuards
 public:
 	CastlenGuards();
 	virtual ~CastlenGuards();
+	void SetState(Castle states);
+	Castle GetState();
 	
 	
 	Vector3 position1;
@@ -50,7 +53,7 @@ public:
 	bool arrived = false;
 	Vector3 direction;
 	float distance = 0;
-	void UpdateCastlenGuards(double dt);
+	void UpdateCastlenGuards(double dt, Vector3 enemyPosition);
 	float RandomInt;
 	int TempRandomInt;
 	Castle castleState;

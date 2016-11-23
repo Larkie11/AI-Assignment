@@ -9,6 +9,7 @@
 #include "ChangeMesh.h"
 #include "AppleSpawning.h"
 #include "CastlenGuards.h"
+#include "Enemy.h"
 
 class AppleSpawning;
 class Scene1 : public SceneBase
@@ -36,7 +37,7 @@ public:
 	void SpawnAppleFSMUpdate(double dt);
 	void HealPointFSMUpdate(double dt);
 	void KingSlimeFSMUpdate(double dt);
-	
+	void RenderCircle(float x, float y, float radius, float r, float g, float b);
 	enum HealPoint
 	{
 		IDLE,
@@ -56,9 +57,12 @@ public:
 private:
 	bool playCastleAnim = false;
 	CMap* m_cMap;	// Handle to the tilemaps
-
+	Vector3 castlePostion;
+	Vector3 castleScale;
+	Vector3 testPosition;
 	AppleSpawning* apples;
 	CastlenGuards* castlenguards;
+	Enemy* enemy;
 
 	bool addedCount = false;
 

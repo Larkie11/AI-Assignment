@@ -38,7 +38,12 @@ void Scene1::Init()
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
 	apples = new AppleSpawning();
 	castlenguards = new CastlenGuards();
+	enemy = new Enemy();
 	apples->Init();
+	enemy->Init(Behavior::GOTOWP, Vector3(100, 100, 1), Vector3(100, 200, 1), 30);
+	castlePostion.Set(30, 300, 1);
+	testPosition.Set(30, 300, 1);
+	castleScale.Set(250, 250, 1);
 }
 
 void Scene1::InitFSM()
@@ -99,7 +104,8 @@ void Scene1::CastleFSMUpdate(double dt)
 		guards2->Update(dt);
 		guards2->m_anim->animActive = true;
 	}
-	castlenguards->UpdateCastlenGuards(dt);
+	castlenguards->UpdateCastlenGuards(dt,testPosition);
+
 }
 
 void Scene1::HealPointFSMUpdate(double dt)
@@ -226,11 +232,42 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 void Scene1::Update(double dt)
 {
 	SceneBase::Update(dt);
+	if (Application::IsKeyPressed('W'))
+	{
+		testPosition.y++;
+	}
+	if (Application::IsKeyPressed('A'))
+	{
+		testPosition.x--;
+
+	}
+	if (Application::IsKeyPressed('S'))
+	{
+		testPosition.y--;
+
+	}
+	if (Application::IsKeyPressed('D'))
+	{
+		testPosition.x++;
+	}
 	apples->UpdateApplesFSM(dt);
 	CastleFSMUpdate(dt);
 	HealPointFSMUpdate(dt);
 	KingSlimeFSMUpdate(dt);
+	enemy->Update(dt,50,300,100,300);
+	float distance = (testPosition - Vector3(147,371,1)).LengthSquared();
+	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
+	if (distance < 20000 && castlenguards->GetState() == Castle::OPEN)
+	{
+		castlenguards->SetState(Castle::DEFENCE);
+	}
+	else if (distance > 25000 && castlenguards->GetState()== Castle::DEFENCE)
+	{
+		castlenguards->SetState(Castle::CLOSE);
+	}
+	cout << distance << " " << testPosition.x << " " << testPosition.y << endl;
 
+	//cout << enemy->GetPosition().x << " " << enemy->GetPosition().y << " " << enemy->GetState() << endl;
 	fps = (float)(1.f / dt);
 }
 
@@ -275,14 +312,21 @@ void Scene1::RenderFSM()
 
 			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
+		case Guards::ATTACKING:
+			//cout << "RIGHT" << endl;
+
+			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+			break;
 		}
 		Render2DMeshWScale(castlenguards->guardList[i].guardMesh->GetNewMesh(), false, castlenguards->guardList[i].scale.x, castlenguards->guardList[i].scale.y, castlenguards->guardList[i].position.x, castlenguards->guardList[i].position.y, false);
 
 	}
 
-	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, 30, 300, false);
+	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, castlePostion.x, castlePostion.y, false);
 
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, castlenguards->doorPos.pos.x, castlenguards->doorPos.pos.y, false);
+	Render2DMeshWScale(meshList[GEO_GUARDS], false, 20, 20, enemy->GetPosition().x, enemy->GetPosition().y, false);
+	Render2DMeshWScale(meshList[GEO_GUARDS], false, 20, 20, testPosition.x, testPosition.y, false);
 
 	
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
@@ -363,6 +407,11 @@ void Scene1::RenderFSMText()
 		ss << "CLOSE";
 		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
 		break;
+	case Castle::DEFENCE:
+		ss.str("");
+		ss << "DEFENCE";
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
+		break;
 	}
 	ss.str("");
 	ss << "To next random state " << castlenguards->RandomInt;
@@ -403,9 +452,12 @@ void Scene1::RenderFSMText()
 			ss.str("");
 			ss << "GUARD";
 			break;
+		case Guards::ATTACKING:
+			ss.str("");
+			ss << "ATTACK INTRUDER";
+			break;
 		}
 		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, castlenguards->guardList[i].position.x - 12, castlenguards->guardList[i].position.y - 16);
-
 	}
 
 	switch (healpointState)
@@ -474,10 +526,10 @@ void Scene1::RenderFSMText()
 			ss << "Apple " << i << " spawned " << apples->GetAppleVec()[i].despawn;
 			break;
 		case Apples::ROTTING:
-			ss << "Apple " << i << " rotting " << apples->GetAppleVec()[i].timer;
+			ss << "Apple " << i << " rotting " << apples->GetAppleVec()[i].despawn;
 			break;
 		case Apples::DECAYED:
-			ss << "Apple " << i << " decaying " << apples->GetAppleVec()[i].timer;
+			ss << "Apple " << i << " decaying " << apples->GetAppleVec()[i].despawn;
 			break;
 		default:
 			break;
@@ -522,22 +574,7 @@ void Scene1::RenderMap()
 	static float xpos = 0.f;
 	static float ypos = 0.f;
 
-	if (Application::IsKeyPressed('U'))
-	{
-		ypos += 0.5f;
-	}
-	if (Application::IsKeyPressed('J'))
-	{
-		ypos -= 0.5f;
-	}
-	if (Application::IsKeyPressed('H'))
-	{
-		xpos -= 0.5f;
-	}
-	if (Application::IsKeyPressed('K'))
-	{
-		xpos += 0.5f;
-	}
+	
 	
 
 	//RenderBackground(meshList[GEO_BACKGROUND]);
