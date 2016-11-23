@@ -17,6 +17,7 @@ public:
 	void Update(double dt,int minX, int maxX, int minY, int maxY);
 	Vector3 GetPosition();
 	Vector3 GetWPPosition();
+	void SetPosition(Vector3 pos);
 	Behavior GetState();
 	void SetState(Behavior behavior);
 private:

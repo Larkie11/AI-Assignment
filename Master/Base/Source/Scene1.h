@@ -63,8 +63,12 @@ private:
 	AppleSpawning* apples;
 	CastlenGuards* castlenguards;
 	Enemy* enemy;
-
+	int smallest = 0;
 	bool addedCount = false;
+	float distancetoenemy = 0;
+	float distancetoenemy1 = 0;
+	Vector3 directionenemy;
+	Vector3 directionenemy1;
 
 	//Heal Point
 	int PP;

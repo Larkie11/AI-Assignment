@@ -46,22 +46,33 @@ public:
 	virtual ~CastlenGuards();
 	void SetState(Castle states);
 	Castle GetState();
+	vector<Guards>GetGuardList();
+	Vector3 GetDoorPos();
 	
-	
+	void InitCastlenGuards(int probabilitytoopen);
+	void UpdateCastlenGuards(double dt, Vector3 enemyPosition);
+	int GetOpenCounter();
+	int GetCloseCounter();
+	int GetRandomInt();
+	int GetTempInt();
+	int GetDefenceCounter();
+	float GetTimer();
+private:
 	Vector3 position1;
 	vector<Guards> guardList;
 	bool arrived = false;
+	float timer;
 	Vector3 direction;
-	float distance = 0;
-	void UpdateCastlenGuards(double dt, Vector3 enemyPosition);
+	float distance;
 	float RandomInt;
 	int TempRandomInt;
+	int openprob;
 	Castle castleState;
-	Vertex doorPos, guard2Pos;
-	Vector3 guard2Scale;
+	Vector3 doorPos;
 	bool guardMoveLeft, stopGuard2Anim;
 	Guards guard1, guard2;
-	int close = 0;
-	int open = 0;
-	bool addedCount = false;
+	int close;
+	int open;
+	int defence;
+	bool addedCount;
 };

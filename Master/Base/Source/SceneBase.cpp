@@ -138,8 +138,12 @@ void SceneBase::Init()
 	meshList[GEO_CASTLE]->textureID = LoadTGA("Image//Castle.tga");
 	meshList[GEO_DOOR] = MeshBuilder::Generate2DMesh("sprite", Color(1, 1, 1), 100, 100, 1, 1);
 	meshList[GEO_DOOR]->textureID = LoadTGA("Image//Door.tga");
+	meshList[GEO_VILLAGER] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
+	meshList[GEO_VILLAGER]->textureID = LoadTGA("Image//Villager.tga");
+
 	meshList[GEO_GUARDS] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
 	meshList[GEO_GUARDS]->textureID = LoadTGA("Image//Guards.tga");
+	
 	meshList[GEO_GUARDSL] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
 	meshList[GEO_GUARDSL ]->textureID = LoadTGA("Image//GuardsL.tga");
 	meshList[GEO_GUARDSR] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
@@ -184,6 +188,12 @@ void SceneBase::Init()
 	{
 		guardsUP->m_anim = new Animation();
 		guardsUP->m_anim->Set(0, 2, 1, 1, true);
+	}
+	SpriteAnimation *villager = dynamic_cast<SpriteAnimation*>(meshList[GEO_VILLAGER]);
+	if (villager)
+	{
+		villager->m_anim = new Animation();
+		villager->m_anim->Set(0, 2, 1, 1, true);
 	}
 
 	meshList[GEO_HEAL_IDLE] = MeshBuilder::GenerateSphere("HealPoint Idle", Color(1, 0, 0), 12, 12, 1);

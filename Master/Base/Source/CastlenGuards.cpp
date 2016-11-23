@@ -5,10 +5,21 @@
 Enemy enemy;
 CastlenGuards:: CastlenGuards()
 {
-	RandomInt = Math::RandIntMinMax(0, 10);
+	RandomInt = TempRandomInt = distance = openprob = open = close = defence = timer = 0;
+	castleState = CLOSE;
+	arrived = false;
+	doorPos.SetZero();
+	addedCount = false;
+}
+CastlenGuards::~CastlenGuards()
+{
+}
+void CastlenGuards::InitCastlenGuards(int probabilitytoopen)
+{
+	RandomInt = Math::RandIntMinMax(0, 100);
 	TempRandomInt = RandomInt;
 	castleState = CLOSE;
-	doorPos.pos.Set(30, 300, 1);
+	doorPos.Set(30, 300, 1);
 
 	guard1.guardMesh = new ChangeMesh();
 	guard1.scale.Set(30, 30, 1);
@@ -38,9 +49,19 @@ CastlenGuards:: CastlenGuards()
 
 	guardList.push_back(guard1);
 	guardList.push_back(guard2);
+	openprob = probabilitytoopen;
 }
-CastlenGuards::~CastlenGuards()
+float CastlenGuards::GetTimer()
 {
+	return timer;
+}
+vector<Guards> CastlenGuards::GetGuardList()
+{
+	return guardList;
+}
+Vector3 CastlenGuards::GetDoorPos()
+{
+	return doorPos;
 }
 Castle CastlenGuards::GetState()
 {
@@ -50,189 +71,218 @@ void CastlenGuards::SetState(Castle states)
 {
 	castleState = states;
 }
+int CastlenGuards::GetOpenCounter()
+{
+	return open;
+}
+int CastlenGuards::GetCloseCounter()
+{
+	return close;
+}
+int CastlenGuards::GetDefenceCounter()
+{
+	return defence;
+}
+int CastlenGuards::GetRandomInt()
+{
+	return RandomInt;
+}
+int CastlenGuards::GetTempInt()
+{
+	return TempRandomInt;
+}
 void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 {
 	if (castleState != DEFENCE)
 	{
-		if (RandomInt <= 0)
+		if (timer <= 0)
 		{
-			RandomInt = Math::RandIntMinMax(0, 10);
+			RandomInt = Math::RandIntMinMax(0, 100);
 			TempRandomInt = RandomInt;
 			addedCount = false;
-		}
-		if (TempRandomInt % 2 == 0)
-		{
-			castleState = OPEN;
-			if (!addedCount)
+			timer = Math::RandFloatMinMax(0, 30);
+			if (TempRandomInt <= openprob)
 			{
-				open++;
-				addedCount = true;
+				castleState = OPEN;
+				if (!addedCount)
+				{
+					open++;
+					addedCount = true;
+				}
+			}
+			//Odd number castle is closed
+			else
+			{
+				castleState = CLOSE;
+				if (!addedCount)
+				{
+					close++;
+					addedCount = true;
+				}
 			}
 		}
-		//Odd number castle is closed
-		else
-		{
-			castleState = CLOSE;
-			if (!addedCount)
-			{
-				close++;
-				addedCount = true;
-			}
-		}
+		
+		
 	}
-		switch (castleState)
+	else if (castleState == DEFENCE && addedCount)
+	{
+		defence++;
+
+		addedCount = false;
+	}
+	switch (castleState)
+	{
+	case OPEN:
+		if (doorPos.y <= 350)
 		{
-		case OPEN:
-			if (doorPos.pos.y <= 350)
+			doorPos.y++;
+		}
+		for (int i = 0; i < guardList.size(); i++)
+		{
+			guardList[i].guardState = Guards::MOVINGD;
+
+			if (!guardList[i].changePos && guardList[i].wayPointID < 3)
 			{
-				doorPos.pos.y++;
+				guardList[i].position = guardList[i].GuardWaypointsOut[0];
+				guardList[i].changePos = true;
+				guardList[i].stopAnimation = false;
+				guardList[i].wayPointID = 1;
 			}
-			for (int i = 0; i < guardList.size(); i++)
-			{
-				guardList[i].guardState = Guards::MOVINGD;
 
-				if (!guardList[i].changePos && guardList[i].wayPointID < 3)
-				{
-					guardList[i].position = guardList[i].GuardWaypointsOut[0];
-					guardList[i].changePos = true;
-					guardList[i].stopAnimation = false;
-					guardList[i].wayPointID = 1;
-				}
-
-				if (guardList[i].wayPointID >= 3 && guardList[i].wayPointID <= 5)
-				{
-					if (i == 0)
-						guardList[i].guardState = Guards::MOVINGL;
-					if (i == 1)
-						guardList[i].guardState = Guards::MOVINGR;
-				}
-
-				if (guardList[i].wayPointID >= guardList[i].GuardWaypointsOut.size() - 1)
-				{
-					guardList[i].guardState = Guards::GUARDING;
-					guardList[i].stopAnimation = true;
-					RandomInt -= dt;
-				}
-				guardList[i].nextPoint = guardList[i].GuardWaypointsOut[guardList[i].wayPointID];
-
-				if (guardList[i].nextPoint != guardList[i].position)
-				{
-					direction = (guardList[i].nextPoint - guardList[i].position).Normalize();
-				}
-				else
-				{
-					guardList[i].stopAnimation = true;
-					guardList[i].changePos = false;
-				}
-
-				distance = (guardList[i].nextPoint - guardList[i].position).LengthSquared();
-				if (distance < 0.1 && guardList[i].wayPointID <= guardList[i].GuardWaypointsOut.size() - 1)
-				{
-					guardList[i].position = guardList[i].nextPoint;
-					arrived = true;
-				}
-				else
-					guardList[i].position = guardList[i].position + direction* 0.7;
-
-				if (arrived && guardList[i].wayPointID < guardList[i].GuardWaypointsOut.size() - 1)
-				{
-					guardList[i].wayPointID++;
-					std::cout << guardList[0].wayPointID << std::endl;
-					arrived = false;
-				}
-			}
-			break;
-		case CLOSE:
-			for (int i = 0; i < guardList.size(); i++)
+			if (guardList[i].wayPointID >= 3 && guardList[i].wayPointID <= 5)
 			{
 				if (i == 0)
-					guardList[i].guardState = Guards::MOVINGR;
-				if (i == 1)
 					guardList[i].guardState = Guards::MOVINGL;
-				if (!guardList[i].changePos && guardList[i].wayPointID > 0)
-				{
-					doorPos.pos.Set(30, 350, 1);
-					guardList[i].position = guardList[i].GuardWaypointsOut[3];
-					guardList[i].changePos = true;
-					guardList[0].wayPointID = 2;
-					guardList[1].wayPointID = 2;
-
-					guardList[i].stopAnimation = false;
-				}
-				if (guardList[i].wayPointID <= 0)
-				{
-					if (doorPos.pos.y > 300)
-					{
-						doorPos.pos.y--;
-					}
-					else
-						RandomInt -= dt;
-					guardList[i].guardState = Guards::IDLING;
-				}
-				if (guardList[i].wayPointID == 1)
-				{
-					guardList[i].guardState = Guards::MOVINGUP;
-
-				}
-				std::cout << guardList[i].wayPointID << std::endl;
-				guardList[i].nextPoint = guardList[i].GuardWaypointsOut[guardList[i].wayPointID];
-
-				if (guardList[i].nextPoint != guardList[i].position)
-				{
-					direction = (guardList[i].nextPoint - guardList[i].position).Normalize();
-				}
-				else
-				{
-					//guardList[i].stopAnimation = true;
-					guardList[i].changePos = false;
-				}
-
-				distance = (guardList[i].nextPoint - guardList[i].position).LengthSquared();
-				if (distance < 0.1 && guardList[i].wayPointID >= 0)
-				{
-					guardList[i].position = guardList[i].nextPoint;
-					arrived = true;
-				}
-				else
-					guardList[i].position = guardList[i].position + direction* 0.7;
-
-				if (arrived && guardList[i].wayPointID >= 0)
-				{
-					guardList[i].wayPointID--;
-					arrived = false;
-
-					if (guardList[i].wayPointID <= 0)
-						guardList[i].wayPointID = 0;
-				}
+				if (i == 1)
+					guardList[i].guardState = Guards::MOVINGR;
 			}
-			break;
-		case DEFENCE:
-			RandomInt = 20;
-			if (doorPos.pos.y <= 350)
+
+			if (guardList[i].wayPointID >= guardList[i].GuardWaypointsOut.size() - 1)
 			{
-				doorPos.pos.y++;
+				guardList[i].guardState = Guards::GUARDING;
+				guardList[i].stopAnimation = true;
+				timer -= dt;
 			}
-			for (int i = 0; i < guardList.size(); i++)
+			guardList[i].nextPoint = guardList[i].GuardWaypointsOut[guardList[i].wayPointID];
+
+			if (guardList[i].nextPoint != guardList[i].position)
 			{
-				guardList[i].lastsavedposition = guardList[i].position;
-				if (guardList[i].wayPointID == 1)
-					guardList[i].wayPointID = 2;
+				direction = (guardList[i].nextPoint - guardList[i].position).Normalize();
+			}
+			else
+			{
+				guardList[i].stopAnimation = true;
+				guardList[i].changePos = false;
+			}
 
-				guardList[i].guardState = Guards::ATTACKING;
-				distance = (enemyPosition - guardList[i].position).LengthSquared();
+			distance = (guardList[i].nextPoint - guardList[i].position).LengthSquared();
+			if (distance < 0.1 && guardList[i].wayPointID <= guardList[i].GuardWaypointsOut.size() - 1)
+			{
+				guardList[i].position = guardList[i].nextPoint;
+				arrived = true;
+			}
+			else
+				guardList[i].position = guardList[i].position + direction* 0.7;
 
-				if (guardList[i].position.y > 270)
-				{
-					guardList[i].position.y-=0.5;
-				}
-				else
-				{
-					direction = (enemyPosition - guardList[i].position).Normalize();
-					guardList[i].position = guardList[i].position + direction* Math::RandFloatMinMax(0.1, 0.5);
-				}
+			if (arrived && guardList[i].wayPointID < guardList[i].GuardWaypointsOut.size() - 1)
+			{
+				guardList[i].wayPointID++;
+				std::cout << guardList[0].wayPointID << std::endl;
+				arrived = false;
+			}
+		}
+		break;
+	case CLOSE:
+		for (int i = 0; i < guardList.size(); i++)
+		{
+			if (i == 0)
+				guardList[i].guardState = Guards::MOVINGR;
+			if (i == 1)
+				guardList[i].guardState = Guards::MOVINGL;
+			if (!guardList[i].changePos && guardList[i].wayPointID > 0)
+			{
+				doorPos.Set(30, 350, 1);
+				guardList[i].position = guardList[i].GuardWaypointsOut[3];
+				guardList[i].changePos = true;
+				guardList[0].wayPointID = 2;
+				guardList[1].wayPointID = 2;
+
 				guardList[i].stopAnimation = false;
 			}
-		
+			if (guardList[i].wayPointID <= 0)
+			{
+				if (doorPos.y > 300)
+				{
+					doorPos.y--;
+				}
+				else
+					timer -= dt;
+				guardList[i].guardState = Guards::IDLING;
+			}
+			if (guardList[i].wayPointID == 1)
+			{
+				guardList[i].guardState = Guards::MOVINGUP;
+
+			}
+			std::cout << guardList[i].wayPointID << std::endl;
+			guardList[i].nextPoint = guardList[i].GuardWaypointsOut[guardList[i].wayPointID];
+
+			if (guardList[i].nextPoint != guardList[i].position)
+			{
+				direction = (guardList[i].nextPoint - guardList[i].position).Normalize();
+			}
+			else
+			{
+				//guardList[i].stopAnimation = true;
+				guardList[i].changePos = false;
+			}
+
+			distance = (guardList[i].nextPoint - guardList[i].position).LengthSquared();
+			if (distance < 0.1 && guardList[i].wayPointID >= 0)
+			{
+				guardList[i].position = guardList[i].nextPoint;
+				arrived = true;
+			}
+			else
+				guardList[i].position = guardList[i].position + direction* 0.7;
+
+			if (arrived && guardList[i].wayPointID >= 0)
+			{
+				guardList[i].wayPointID--;
+				arrived = false;
+
+				if (guardList[i].wayPointID <= 0)
+					guardList[i].wayPointID = 0;
+			}
+		}
+
+		break;
+	case DEFENCE:
+		timer = 20;
+		if (doorPos.y <= 350)
+		{
+			doorPos.y++;
+		}
+		for (int i = 0; i < guardList.size(); i++)
+		{
+			guardList[i].lastsavedposition = guardList[i].position;
+			if (guardList[i].wayPointID == 1)
+				guardList[i].wayPointID = 2;
+
+			guardList[i].guardState = Guards::ATTACKING;
+			distance = (enemyPosition - guardList[i].position).LengthSquared();
+
+			if (guardList[i].position.y > 270)
+			{
+				guardList[i].position.y -= 0.5;
+			}
+			else
+			{
+				direction = (enemyPosition - guardList[i].position).Normalize();
+				guardList[i].position = guardList[i].position + direction* Math::RandFloatMinMax(0.1, 0.5);
+			}
+			guardList[i].stopAnimation = false;
+		}
 
 			break;
 		default:

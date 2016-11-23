@@ -44,6 +44,10 @@ void Scene1::Init()
 	castlePostion.Set(30, 300, 1);
 	testPosition.Set(30, 300, 1);
 	castleScale.Set(250, 250, 1);
+	castlenguards->InitCastlenGuards(30);
+	directionenemy.SetZero();
+	directionenemy1.SetZero();
+	testPosition = enemy->GetPosition();
 }
 
 void Scene1::InitFSM()
@@ -64,6 +68,7 @@ void Scene1::InitFSM()
 	RandomMoveY = RandomInteger(-5, 5);
 	KSstate = LAZE;
 	KSpos.pos.Set(500, 300, 1);
+
 }
 
 void Scene1::PlayerUpdate(double dt)
@@ -92,14 +97,20 @@ void Scene1::CastleFSMUpdate(double dt)
 		castle->Update(dt);
 		castle->m_anim->animActive = true;
 	}
-	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(castlenguards->guardList[0].guardMesh->GetNewMesh());
-	if (guards && !castlenguards->guardList[0].stopAnimation)
+	SpriteAnimation *villager = dynamic_cast<SpriteAnimation*>(meshList[GEO_VILLAGER]);
+	if (villager)
+	{
+		villager->Update(dt);
+		villager->m_anim->animActive = true;
+	}
+	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(castlenguards->GetGuardList()[0].guardMesh->GetNewMesh());
+	if (guards && !castlenguards->GetGuardList()[0].stopAnimation)
 	{
 			guards->Update(dt);
 			guards->m_anim->animActive = true;
 	}
-	SpriteAnimation *guards2 = dynamic_cast<SpriteAnimation*>(castlenguards->guardList[1].guardMesh->GetNewMesh());
-	if (guards2 && !castlenguards->guardList[1].stopAnimation)
+	SpriteAnimation *guards2 = dynamic_cast<SpriteAnimation*>(castlenguards->GetGuardList()[1].guardMesh->GetNewMesh());
+	if (guards2 && !castlenguards->GetGuardList()[1].stopAnimation)
 	{
 		guards2->Update(dt);
 		guards2->m_anim->animActive = true;
@@ -250,22 +261,40 @@ void Scene1::Update(double dt)
 	{
 		testPosition.x++;
 	}
+	if (enemy->GetState() != Behavior::IDLE && enemy->GetState() != Behavior::RUN)
+	{
+		testPosition = enemy->GetPosition();
+	}
 	apples->UpdateApplesFSM(dt);
 	CastleFSMUpdate(dt);
 	HealPointFSMUpdate(dt);
 	KingSlimeFSMUpdate(dt);
-	enemy->Update(dt,50,300,100,300);
-	float distance = (testPosition - Vector3(147,371,1)).LengthSquared();
+	enemy->Update(dt, 50, 300, 200, 290);
+
+	float distance = (testPosition - Vector3(147, 371, 1)).LengthSquared();
+	distancetoenemy = (castlenguards->GetGuardList()[0].position - enemy->GetPosition()).LengthSquared();
+	distancetoenemy1 = (castlenguards->GetGuardList()[1].position - enemy->GetPosition()).LengthSquared();
+	directionenemy = (enemy->GetPosition() - castlenguards->GetGuardList()[0].position).Normalize();
+	directionenemy1 = (enemy->GetPosition() - castlenguards->GetGuardList()[1].position).Normalize();
+
+	cout << distancetoenemy << endl;
+	if (distancetoenemy < 2000 && castlenguards->GetState() != Castle::CLOSE|| distancetoenemy1 <2000 && castlenguards->GetState() != Castle::CLOSE)
+	{
+		enemy->SetState(Behavior::RUN);
+		testPosition = testPosition + directionenemy * 1.5;
+		enemy->SetPosition(testPosition);
+	}
+	
 	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
-	if (distance < 20000 && castlenguards->GetState() == Castle::OPEN)
+	if (distance < 25000 && castlenguards->GetState() == Castle::OPEN)
 	{
 		castlenguards->SetState(Castle::DEFENCE);
 	}
 	else if (distance > 25000 && castlenguards->GetState()== Castle::DEFENCE)
 	{
-		castlenguards->SetState(Castle::CLOSE);
+		castlenguards->SetState(Castle::OPEN);
 	}
-	cout << distance << " " << testPosition.x << " " << testPosition.y << endl;
+	//cout << distance << " " << testPosition.x << " " << testPosition.y << endl;
 
 	//cout << enemy->GetPosition().x << " " << enemy->GetPosition().y << " " << enemy->GetState() << endl;
 	fps = (float)(1.f / dt);
@@ -278,55 +307,54 @@ int Scene1::RandomInteger(int lowerLimit, int upperLimit)
 
 void Scene1::RenderFSM()
 {
-	for (int i = 0; i < castlenguards->guardList.size(); i++)
+	for (int i = 0; i < castlenguards->GetGuardList().size(); i++)
 	{
-		switch (castlenguards->guardList[i].guardState)
+		switch (castlenguards -> GetGuardList()[i].guardState)
 		{
 		case Guards::IDLING:
 			//cout << "IDLING" << endl;
 
-			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		case Guards::MOVINGD:
 			//cout << "DOWN" << endl;
 
-			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		case Guards::MOVINGUP:
 			//cout << "UP" << endl;
 
-			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
+			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
 			break;
 		case Guards::MOVINGL:
 			//cout << "LEFT" << endl;
 
-			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
+			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
 			break;
 		case Guards::MOVINGR:
 			//cout << "RIGHT" << endl;
 
-			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
+			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
 			break;
 		case Guards::GUARDING:
 			//cout << "RIGHT" << endl;
 
-			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		case Guards::ATTACKING:
 			//cout << "RIGHT" << endl;
 
-			castlenguards->guardList[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		}
-		Render2DMeshWScale(castlenguards->guardList[i].guardMesh->GetNewMesh(), false, castlenguards->guardList[i].scale.x, castlenguards->guardList[i].scale.y, castlenguards->guardList[i].position.x, castlenguards->guardList[i].position.y, false);
+		Render2DMeshWScale(castlenguards->GetGuardList()[i].guardMesh->GetNewMesh(), false, castlenguards->GetGuardList()[i].scale.x, castlenguards->GetGuardList()[i].scale.y, castlenguards->GetGuardList()[i].position.x, castlenguards->GetGuardList()[i].position.y, false);
 
 	}
 
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, castlePostion.x, castlePostion.y, false);
 
-	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, castlenguards->doorPos.pos.x, castlenguards->doorPos.pos.y, false);
-	Render2DMeshWScale(meshList[GEO_GUARDS], false, 20, 20, enemy->GetPosition().x, enemy->GetPosition().y, false);
-	Render2DMeshWScale(meshList[GEO_GUARDS], false, 20, 20, testPosition.x, testPosition.y, false);
+	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, castlenguards->GetDoorPos().x, castlenguards->GetDoorPos().y, false);
+	Render2DMeshWScale(meshList[GEO_VILLAGER], false, 20, 20, enemy->GetPosition().x, enemy->GetPosition().y, false);
 
 	
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
@@ -392,10 +420,10 @@ void Scene1::RenderFSMText()
 	ss << "FPS: " << fps;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 0), 30, 0, 0);
 	ss.str("");
-	ss << "Open: " << castlenguards->open << " Close: " << castlenguards->close;
+	ss << "Open: " << castlenguards->GetOpenCounter() << " Close: " << castlenguards->GetCloseCounter() << " Defence: " << castlenguards->GetDefenceCounter();
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 520);
 
-	switch (castlenguards->castleState)
+	switch (castlenguards->GetState())
 	{
 	case Castle::OPEN:
 		ss.str("");
@@ -414,18 +442,38 @@ void Scene1::RenderFSMText()
 		break;
 	}
 	ss.str("");
-	ss << "To next random state " << castlenguards->RandomInt;
+	ss << "To next random state " << castlenguards->GetTimer();
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 570);
 	ss.str("");
-	ss << "Previous random state number " << castlenguards->TempRandomInt;
+	ss << "Previous random state number " << castlenguards->GetTempInt();
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 585);
+	switch (enemy->GetState())
+	{
+	case Behavior::IDLE:
+		ss.str("");
+		ss << "IDLING";
+		break;
+	case Behavior::RUN:
+		ss.str("");
+		ss << "RUN";
+		break;
+	case Behavior::GOTOWP:
+		ss.str("");
+		ss << "WALKING";
+		break;
+	default:
+		break;
+	}
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, enemy->GetPosition().x, enemy->GetPosition().y - 20);
+
+
 
 	ss.str("");
 	ss << "KS Hunger: " << Hunger;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 200);
-	for (int i = 0; i < castlenguards->guardList.size(); i++)
+	for (int i = 0; i < castlenguards->GetGuardList().size(); i++)
 	{
-		switch (castlenguards->guardList[i].guardState)
+		switch (castlenguards->GetGuardList()[i].guardState)
 		{
 		case Guards::IDLING:
 			ss.str("");
@@ -457,7 +505,7 @@ void Scene1::RenderFSMText()
 			ss << "ATTACK INTRUDER";
 			break;
 		}
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, castlenguards->guardList[i].position.x - 12, castlenguards->guardList[i].position.y - 16);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, castlenguards->GetGuardList()[i].position.x - 12, castlenguards->GetGuardList()[i].position.y - 16);
 	}
 
 	switch (healpointState)
