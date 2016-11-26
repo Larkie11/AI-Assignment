@@ -53,7 +53,7 @@ void Scene1::Init()
 void Scene1::InitFSM()
 {
 	//Heal Point data
-	healpointState = HEAL;
+	healpointState = IDLE;
 	PP = 3;
 	PPcounter = 100;
 	healpointPos.pos.Set(450, 100, 1);
@@ -121,10 +121,33 @@ void Scene1::CastleFSMUpdate(double dt)
 
 void Scene1::HealPointFSMUpdate(double dt)
 {
+	SpriteAnimation *HealIDLE = dynamic_cast<SpriteAnimation*>(meshList[GEO_HEAL_IDLE]);
+	if (HealIDLE)
+	{
+		HealIDLE->Update(dt);
+		HealIDLE->m_anim->animActive = true;
+	}
+	SpriteAnimation *HealHEAL = dynamic_cast<SpriteAnimation*>(meshList[GEO_HEAL_HEAL]);
+	if (HealHEAL)
+	{
+		HealHEAL->Update(dt);
+		HealHEAL->m_anim->animActive = true;
+	}
+
+	RandomInt2 -= dt* 0.001;
+	if (RandomInt2 <= 0)
+	{
+		RandomInt2 = RandomInteger(1, 200);
+		TempRandomInt2 = RandomInt2;
+	}
+
 	//HealPoint FSM
 	if (healpointState == IDLE)
 	{
-
+		if (TempRandomInt2 <= 20)
+			healpointState = HEAL;
+		else
+			healpointState = IDLE;
 	}
 	else if (healpointState == HEAL)
 	{
@@ -216,25 +239,26 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 
 		for (int i = 0; i < apples->GetAppleVec().size(); i++)
 		{
-			if (apples->GetAppleVec()[i].spawned)
+			if (apples->GetAppleVec()[1].spawned)
 			{
-				d.x = apples->GetAppleVec()[i].position.x - KSpos.pos.x;
-				d.y = apples->GetAppleVec()[i].position.y - KSpos.pos.y;
+				d.x = apples->GetAppleVec()[1].position.x - KSpos.pos.x;
+				d.y = apples->GetAppleVec()[1].position.y - KSpos.pos.y;
+				if (KSpos.pos.x != apples->GetAppleVec()[1].position.x)
+				{
+
+					KSpos.pos.x += d.x * dt * 0.2f;
+					KSpos.pos.y += d.y * dt * 0.2f;
+					if (KSpos.pos.x >= apples->GetAppleVec()[1].position.x - 1 && KSpos.pos.x <= apples->GetAppleVec()[1].position.x + 1)
+					{
+						apples->GetAppleVec()[i].spawned = false;
+						Hunger = 100;
+						KSstate = LAZE;
+					}
+				}
 			}
 			if (d.IsZero())
 			{
 				return;
-			}
-			p_speed = 10.f;
-			this->vel = d.Normalized() * p_speed;
-			KSpos.pos.x += vel.x * dt;
-			KSpos.pos.y += vel.y * dt;
-
-			float distanceToCheck = 0.04f * p_speed;
-			if (d.LengthSquared() <= distanceToCheck * distanceToCheck)
-			{
-				apples->GetAppleVec()[i].spawned = false;
-				Hunger = 100;
 			}
 		}
 	}
@@ -388,11 +412,11 @@ void Scene1::RenderFSM()
 	
 	//Render HealPoint
 	if (healpointState == HEAL)
-		Render2DMeshWScale(meshList[GEO_HEAL_HEAL], false, 10, 10, healpointPos.pos.x, healpointPos.pos.y, false);
+		Render2DMeshWScale(meshList[GEO_HEAL_HEAL], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
 	else if (healpointState == REST)
-		Render2DMeshWScale(meshList[GEO_HEAL_REST], false, 10, 10, healpointPos.pos.x, healpointPos.pos.y, false);
+		Render2DMeshWScale(meshList[GEO_HEAL_REST], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
 	else
-		Render2DMeshWScale(meshList[GEO_HEAL_IDLE], false, 10, 10, healpointPos.pos.x, healpointPos.pos.y, false);
+		Render2DMeshWScale(meshList[GEO_HEAL_IDLE], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
 
 	//Render Kingslime
 	if (KSstate == IDLE)
@@ -470,7 +494,7 @@ void Scene1::RenderFSMText()
 
 	ss.str("");
 	ss << "KS Hunger: " << Hunger;
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 200);
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 10);
 	for (int i = 0; i < castlenguards->GetGuardList().size(); i++)
 	{
 		switch (castlenguards->GetGuardList()[i].guardState)
@@ -513,17 +537,17 @@ void Scene1::RenderFSMText()
 	case REST:
 		ss.str("");
 		ss << "RECOVERING ITSELF";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 70);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, healpointPos.pos.x, healpointPos.pos.y - 35);
 		break;
 	case IDLE:
 		ss.str("");
 		ss << "IDLING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 70);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, healpointPos.pos.x, healpointPos.pos.y - 35);
 		break;
 	case HEAL:
 		ss.str("");
 		ss << "HEALING PLAYER";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 70);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, healpointPos.pos.x, healpointPos.pos.y - 35);
 		break;
 	}
 	switch (KSstate)
@@ -531,27 +555,27 @@ void Scene1::RenderFSMText()
 	case Scene1::LAZE:
 		ss.str("");
 		ss << "KS State:IDLING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
 		break;
 	case Scene1::MOVE:
 		ss.str("");
 		ss << "KS State:MOVING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
 		break;
 	case Scene1::CHASE:
 		ss.str("");
 		ss << "KS State:CHASING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
 		break;
 	case Scene1::RUN:
 		ss.str("");
 		ss << "KS State:RUNNINIG";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
 		break;
 	case Scene1::EAT:
 		ss.str("");
 		ss << "KS State:EATING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 500, 230);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
 		break;
 	default:
 		break;
@@ -560,7 +584,7 @@ void Scene1::RenderFSMText()
 	ss << "PP: " << PP;
 	int x = 0;
 	ostringstream oss;
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, 180, 50);
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, healpointPos.pos.x, healpointPos.pos.y - 15);
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{
 		ss.str("");

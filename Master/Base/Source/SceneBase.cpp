@@ -196,9 +196,12 @@ void SceneBase::Init()
 		villager->m_anim->Set(0, 2, 1, 1, true);
 	}
 
-	meshList[GEO_HEAL_IDLE] = MeshBuilder::GenerateSphere("HealPoint Idle", Color(1, 0, 0), 12, 12, 1);
-	meshList[GEO_HEAL_REST] = MeshBuilder::GenerateSphere("HealPoint Idle", Color(0, 0, 1), 12, 12, 1);
-	meshList[GEO_HEAL_HEAL] = MeshBuilder::GenerateSphere("HealPoint Idle", Color(0, 1, 0), 12, 12, 1);
+	meshList[GEO_HEAL_IDLE] = MeshBuilder::GenerateSpriteAnimation("Healing Fountain", 1, 4);
+	meshList[GEO_HEAL_IDLE]->textureID = LoadTGA("Image//Fountain.tga");
+	meshList[GEO_HEAL_REST] = MeshBuilder::GenerateSpriteAnimation("Empty Fountain", 1, 1);
+	meshList[GEO_HEAL_REST]->textureID = LoadTGA("Image//EmptyFountain.tga");
+	meshList[GEO_HEAL_HEAL] = MeshBuilder::GenerateSpriteAnimation("Healing Fountain", 1, 4);
+	meshList[GEO_HEAL_HEAL]->textureID = LoadTGA("Image//Fountain.tga");
 
 	meshList[GEO_KSIDLE] = MeshBuilder::GenerateSpriteAnimation("Idle Slime", 1, 2);
 	meshList[GEO_KSIDLE]->textureID = LoadTGA("Image//KingSlimeIdle.tga");
@@ -224,6 +227,19 @@ void SceneBase::Init()
 	{
 		ksMOVER->m_anim = new Animation();
 		ksMOVER->m_anim->Set(0, 6, 1, 1, true);
+	}
+
+	SpriteAnimation *HealIDLE = dynamic_cast<SpriteAnimation*>(meshList[GEO_HEAL_IDLE]);
+	if (HealIDLE)
+	{
+		HealIDLE->m_anim = new Animation();
+		HealIDLE->m_anim->Set(0, 3, 1, 1, true);
+	}
+	SpriteAnimation *HealHEAL = dynamic_cast<SpriteAnimation*>(meshList[GEO_HEAL_HEAL]);
+	if (HealHEAL)
+	{
+		HealHEAL->m_anim = new Animation();
+		HealHEAL->m_anim->Set(0, 3, 1, 1, true);
 	}
 
 	Math::InitRNG();
