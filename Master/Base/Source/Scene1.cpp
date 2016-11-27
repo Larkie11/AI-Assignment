@@ -21,6 +21,12 @@ Scene1::~Scene1()
 		delete m_cMap;
 		m_cMap = NULL;
 	}
+	delete apples;
+	apples = NULL;
+	delete castlenguards;
+	castlenguards = NULL;
+	delete enemy;
+	enemy = NULL;
 }
 
 void Scene1::Reset()
@@ -29,6 +35,9 @@ void Scene1::Reset()
 
 void Scene1::Init()
 {
+	apples = new AppleSpawning();
+	castlenguards = new CastlenGuards();
+	enemy = new Enemy();
 	SceneBase::Init();
 	InitFSM();
 	srand((unsigned)time(NULL));
@@ -36,18 +45,6 @@ void Scene1::Init()
 	m_cMap = new CMap();
 	m_cMap->Init(Application::GetInstance().GetScreenHeight(), Application::GetInstance().GetScreenWidth(), 32);
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
-	apples = new AppleSpawning();
-	castlenguards = new CastlenGuards();
-	enemy = new Enemy();
-	apples->Init();
-	enemy->Init(Behavior::GOTOWP, Vector3(100, 100, 1), Vector3(100, 200, 1), 30);
-	castlePostion.Set(30, 300, 1);
-	testPosition.Set(30, 300, 1);
-	castleScale.Set(250, 250, 1);
-	castlenguards->InitCastlenGuards(30);
-	directionenemy.SetZero();
-	directionenemy1.SetZero();
-	testPosition = enemy->GetPosition();
 }
 
 void Scene1::InitFSM()
@@ -69,6 +66,15 @@ void Scene1::InitFSM()
 	KSstate = LAZE;
 	KSpos.pos.Set(500, 300, 1);
 
+	apples->Init(20);
+	enemy->Init(Behavior::GOTOWP, Vector3(100, 100, 1), Vector3(100, 200, 1), 30);
+	castlePostion.Set(30, 300, 1);
+	testPosition.Set(30, 300, 1);
+	castleScale.Set(250, 250, 1);
+	castlenguards->InitCastlenGuards(30);
+	directionenemy.SetZero();
+	directionenemy1.SetZero();
+	testPosition = enemy->GetPosition();
 }
 
 void Scene1::PlayerUpdate(double dt)
@@ -85,7 +91,7 @@ void Scene1::MapUpdate(double dt)
 
 void Scene1::SpawnAppleFSMUpdate(double dt)
 {
-	
+	apples->UpdateApplesFSM(dt);
 }
 
 void Scene1::CastleFSMUpdate(double dt)
@@ -256,6 +262,8 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 					}
 				}
 			}
+			else
+				KSstate = LAZE;
 			if (d.IsZero())
 			{
 				return;
@@ -267,6 +275,7 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 void Scene1::Update(double dt)
 {
 	SceneBase::Update(dt);
+	UpdateFSM(dt);
 	if (Application::IsKeyPressed('W'))
 	{
 		testPosition.y++;
@@ -285,14 +294,19 @@ void Scene1::Update(double dt)
 	{
 		testPosition.x++;
 	}
+	fps = (float)(1.f / dt);
+}
+
+void Scene1::UpdateFSM(double dt)
+{
 	if (enemy->GetState() != Behavior::IDLE && enemy->GetState() != Behavior::RUN)
 	{
 		testPosition = enemy->GetPosition();
 	}
-	apples->UpdateApplesFSM(dt);
 	CastleFSMUpdate(dt);
 	HealPointFSMUpdate(dt);
 	KingSlimeFSMUpdate(dt);
+	SpawnAppleFSMUpdate(dt);
 	enemy->Update(dt, 50, 300, 200, 290);
 
 	float distance = (testPosition - Vector3(147, 371, 1)).LengthSquared();
@@ -301,27 +315,22 @@ void Scene1::Update(double dt)
 	directionenemy = (enemy->GetPosition() - castlenguards->GetGuardList()[0].position).Normalize();
 	directionenemy1 = (enemy->GetPosition() - castlenguards->GetGuardList()[1].position).Normalize();
 
-	cout << distancetoenemy << endl;
-	if (distancetoenemy < 2000 && castlenguards->GetState() != Castle::CLOSE|| distancetoenemy1 <2000 && castlenguards->GetState() != Castle::CLOSE)
+	if (distancetoenemy < 2000 && castlenguards->GetState() != Castle::CLOSE || distancetoenemy1 <2000 && castlenguards->GetState() != Castle::CLOSE)
 	{
 		enemy->SetState(Behavior::RUN);
 		testPosition = testPosition + directionenemy * 1.5;
 		enemy->SetPosition(testPosition);
 	}
-	
+
 	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
 	if (distance < 25000 && castlenguards->GetState() == Castle::OPEN)
 	{
 		castlenguards->SetState(Castle::DEFENCE);
 	}
-	else if (distance > 25000 && castlenguards->GetState()== Castle::DEFENCE)
+	else if (distance > 25000 && castlenguards->GetState() == Castle::DEFENCE)
 	{
 		castlenguards->SetState(Castle::OPEN);
 	}
-	//cout << distance << " " << testPosition.x << " " << testPosition.y << endl;
-
-	//cout << enemy->GetPosition().x << " " << enemy->GetPosition().y << " " << enemy->GetState() << endl;
-	fps = (float)(1.f / dt);
 }
 
 int Scene1::RandomInteger(int lowerLimit, int upperLimit)
@@ -336,49 +345,32 @@ void Scene1::RenderFSM()
 		switch (castlenguards -> GetGuardList()[i].guardState)
 		{
 		case Guards::IDLING:
-			//cout << "IDLING" << endl;
-
 			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		case Guards::MOVINGD:
-			//cout << "DOWN" << endl;
-
 			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		case Guards::MOVINGUP:
-			//cout << "UP" << endl;
-
 			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSUP]);
 			break;
 		case Guards::MOVINGL:
-			//cout << "LEFT" << endl;
-
 			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSL]);
 			break;
 		case Guards::MOVINGR:
-			//cout << "RIGHT" << endl;
-
 			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDSR]);
 			break;
 		case Guards::GUARDING:
-			//cout << "RIGHT" << endl;
-
 			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		case Guards::ATTACKING:
-			//cout << "RIGHT" << endl;
-
 			castlenguards->GetGuardList()[i].guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
 			break;
 		}
 		Render2DMeshWScale(castlenguards->GetGuardList()[i].guardMesh->GetNewMesh(), false, castlenguards->GetGuardList()[i].scale.x, castlenguards->GetGuardList()[i].scale.y, castlenguards->GetGuardList()[i].position.x, castlenguards->GetGuardList()[i].position.y, false);
-
 	}
 
-	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, castlePostion.x, castlePostion.y, false);
-
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, castlenguards->GetDoorPos().x, castlenguards->GetDoorPos().y, false);
-	Render2DMeshWScale(meshList[GEO_VILLAGER], false, 20, 20, enemy->GetPosition().x, enemy->GetPosition().y, false);
+	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, castlePostion.x, castlePostion.y, false);
 
 	
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
@@ -409,7 +401,6 @@ void Scene1::RenderFSM()
 		Render2DMeshWScale(meshList[GEO_TREE], false, 170, 170, apples->GetTreeVec()[i].pos.x, apples->GetTreeVec()[i].pos.y, false);
 	}
 
-	
 	//Render HealPoint
 	if (healpointState == HEAL)
 		Render2DMeshWScale(meshList[GEO_HEAL_HEAL], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
@@ -428,49 +419,50 @@ void Scene1::RenderFSM()
 		else
 			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.pos.x, KSpos.pos.y, false);
 	}
+
+	Render2DMeshWScale(meshList[GEO_VILLAGER], false, 20, 20, enemy->GetPosition().x, enemy->GetPosition().y, false);
+
 }
 
 void Scene1::RenderFSMText()
 {
 	std::ostringstream ss;
-
-	/*ss.str("");
-	ss << "Spawning " << applePositions.size() << " apples";
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 450, 3);
-	*/
 	//On screen text
 	ss.str("");
 	ss.precision(5);
 	ss << "FPS: " << fps;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 0), 30, 0, 0);
-	ss.str("");
-	ss << "Open: " << castlenguards->GetOpenCounter() << " Close: " << castlenguards->GetCloseCounter() << " Defence: " << castlenguards->GetDefenceCounter();
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 520);
 
 	switch (castlenguards->GetState())
 	{
 	case Castle::OPEN:
 		ss.str("");
-		ss << "OPEN";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
+		ss << "CASTLE STATE: OPEN";
 		break;
 	case Castle::CLOSE:
 		ss.str("");
-		ss << "CLOSE";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
+		ss << "CASTLE STATE: CLOSE";
 		break;
 	case Castle::DEFENCE:
 		ss.str("");
-		ss << "DEFENCE";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 20, 540);
+		ss << "CASTLE STATE: DEFENCE";
 		break;
 	}
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 30, 0, 560);
+
 	ss.str("");
-	ss << "To next random state " << castlenguards->GetTimer();
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 570);
+	ss << "To next random state timer " << castlenguards->GetTimer();
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 0, 583);
 	ss.str("");
+	ss << "Open: " << castlenguards->GetOpenCounter() << " Close: " << castlenguards->GetCloseCounter() << " Defence: " << castlenguards->GetDefenceCounter();
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.7, 0.2, 0), 20, 0, 530);
+
+	/*ss.str("");
 	ss << "Previous random state number " << castlenguards->GetTempInt();
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 585);
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, 20, 585);*/
+	ss.str("");
+	ss << "Probability to open: " << castlenguards->GetOpenProb();
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.5, 0, 0.2), 20, 15, 548);
 	switch (enemy->GetState())
 	{
 	case Behavior::IDLE:
@@ -490,8 +482,6 @@ void Scene1::RenderFSMText()
 	}
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, enemy->GetPosition().x, enemy->GetPosition().y - 20);
 
-
-
 	ss.str("");
 	ss << "KS Hunger: " << Hunger;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 10);
@@ -504,7 +494,6 @@ void Scene1::RenderFSMText()
 			ss << "IDLING";
 			break;
 		case Guards::MOVINGD:
-			//cout << "DOWN" << endl;
 			ss.str("");
 			ss << "DOWN";
 			break;
@@ -580,6 +569,7 @@ void Scene1::RenderFSMText()
 	default:
 		break;
 	}
+
 	ss.str("");
 	ss << "PP: " << PP;
 	int x = 0;
@@ -588,7 +578,7 @@ void Scene1::RenderFSMText()
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{
 		ss.str("");
-		x -= 3;
+		x -= 9;
 		switch (apples->GetAppleVec()[i].appleStates)
 		{
 		case  Apples::SPAWNING:
@@ -606,52 +596,23 @@ void Scene1::RenderFSMText()
 		default:
 			break;
 		}
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, apples->GetAppleVec()[i].position.x-30, apples->GetAppleVec()[i].position.y - x);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, apples->GetAppleVec()[i].position.x-50, apples->GetAppleVec()[i].position.y - x);
 
-	}
-	int y = 0;
-	
-	ostringstream oss2;
-	for (int i = 0; i < apples->GetAppleVec().size(); i++)
-	{
-		x += 20;
-		ss.str("");
-
-		if (apples->GetAppleVec()[i].timer > 0)
-			ss << "Apple " << i << " " << apples->GetAppleVec()[i].timer;
-
-		if (apples->GetAppleVec()[i].spawned && apples->GetAppleVec()[i].despawn> 10)
-			ss << "Apple " << i << " Spawned";
-
-		if (apples->GetAppleVec()[i].appleStates == Apples::ROTTING)
-			ss << "Apple " << i << " Rotting";
-
-		if (apples->GetAppleVec()[i].appleStates == Apples::DECAYED)
-			ss << "Apple " << i << " Decaying";
-		
-		oss2.str("");
-		oss2 << "Rot Probability " << apples->GetAppleVec()[i].probability;
-
-		RenderTextOnScreen(meshList[GEO_TEXT], oss2.str(), Color(0, 0, 1), 20, 400, x);
 	}
 	ss.str("");
-	ss << apples->countNoRot << " " << apples->countRot;
+	ss << "Decayed apples:" <<  apples->countNoRot << "  Rotten apples:" << apples->countRot;
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.7, 0.2, 0), 20, 460, 550);
 
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, 20, 300);
+	ss.str("");
+	ss << "Apples Rot Probability " << apples->GetAppleVec()[0].probability;
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.5, 0, 0.2), 20, 500, 570);
 }
 
 
 void Scene1::RenderMap()
 {
-	static float xpos = 0.f;
-	static float ypos = 0.f;
-
-	
-	
-
 	//RenderBackground(meshList[GEO_BACKGROUND]);
 	RenderTileMap(meshList[GEO_TILESET1], m_cMap);
-	
 }
 
 void Scene1::RenderGO()
@@ -675,6 +636,8 @@ void Scene1::Exit()
 			delete meshList[i];
 	}
 	delete apples;
+	delete castlenguards;
+	delete enemy;
 	glDeleteProgram(m_programID);
 	glDeleteVertexArrays(1, &m_vertexArrayID);
 }

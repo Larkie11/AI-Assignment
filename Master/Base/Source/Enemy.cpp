@@ -89,5 +89,4 @@ void Enemy::Update(double dt,int minX, int maxX, int minY, int maxY)
 	{
 		arrived = true;
 	}
-	std::cout << "TIME " << idletimer << std::endl;
 }

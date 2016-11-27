@@ -71,6 +71,10 @@ void CastlenGuards::SetState(Castle states)
 {
 	castleState = states;
 }
+int CastlenGuards::GetOpenProb()
+{
+	return openprob;
+}
 int CastlenGuards::GetOpenCounter()
 {
 	return open;
@@ -110,7 +114,6 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 					addedCount = true;
 				}
 			}
-			//Odd number castle is closed
 			else
 			{
 				castleState = CLOSE;
@@ -187,7 +190,6 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 			if (arrived && guardList[i].wayPointID < guardList[i].GuardWaypointsOut.size() - 1)
 			{
 				guardList[i].wayPointID++;
-				std::cout << guardList[0].wayPointID << std::endl;
 				arrived = false;
 			}
 		}
@@ -224,7 +226,6 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 				guardList[i].guardState = Guards::MOVINGUP;
 
 			}
-			std::cout << guardList[i].wayPointID << std::endl;
 			guardList[i].nextPoint = guardList[i].GuardWaypointsOut[guardList[i].wayPointID];
 
 			if (guardList[i].nextPoint != guardList[i].position)

@@ -31,6 +31,7 @@ public:
 	void MapUpdate(double dt);
 	int RandomInteger(int lowerLimit, int upperLimit);
 	void InitFSM();
+	void UpdateFSM(double dt);
 	void RenderFSM();
 	void RenderFSMText();
 	void CastleFSMUpdate(double dt);

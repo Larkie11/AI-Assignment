@@ -9,10 +9,10 @@ AppleSpawning::~AppleSpawning()
 {
 
 }
-void AppleSpawning::Init()
+void AppleSpawning::Init(int probability)
 {
 	InitTrees();
-	InitApples();
+	InitApples(probability);
 }
 void AppleSpawning::InitTrees()
 {
@@ -24,7 +24,7 @@ void AppleSpawning::InitTrees()
 		treeVec.push_back(trees);
 	}
 }
-void AppleSpawning::InitApples()
+void AppleSpawning::InitApples(int probability)
 {
 	for (int i = 0; i < Math::RandIntMinMax(1, 5); i++)
 	{
@@ -37,10 +37,10 @@ void AppleSpawning::InitApples()
 		apples.newPosition.Set(apples.position.x, apples.position.y - 80, 1);
 		apples.appleStates = Apples::SPAWNING;
 		apples.appleMesh = new ChangeMesh();
-		apples.probability = 20;
+		apples.probability = probability;
 		apples.randomProb = Math::RandIntMinMax(0, 100);
-		apples.probabilityCountDown = 30;
-		apples.despawn = Math::RandFloatMinMax(25, 40);
+		apples.probabilityCountDown = Math::RandIntMinMax(20,30);
+		apples.despawn = Math::RandFloatMinMax(40, 60);
 		appleVec.push_back(apples);
 	}
 }
@@ -60,7 +60,7 @@ void AppleSpawning::RespawnApples()
 		{
 			appleVec[i].spawned = false;
 			appleVec[i].randomProb = Math::RandIntMinMax(0, 100);
-			appleVec[i].probabilityCountDown = 30;
+			appleVec[i].probabilityCountDown = Math::RandIntMinMax(20,30);
 			appleVec[i].appleStates = Apples::SPAWNING;
 			int randTreePosition = Math::RandIntMinMax(-130, 10);
 			int randTree = Math::RandIntMinMax(0, treeVec.size() - 1);
@@ -68,7 +68,7 @@ void AppleSpawning::RespawnApples()
 			appleVec[i].position.x = treeVec[randTree].pos.x - randTreePosition;
 			appleVec[i].position.y = treeVec[randTree].pos.y + 90;
 			appleVec[i].newPosition.Set(appleVec[i].position.x, appleVec[i].position.y - 80, 1);
-			appleVec[i].despawn = Math::RandFloatMinMax(25, 40);
+			appleVec[i].despawn = Math::RandFloatMinMax(40, 60);
 			appleVec[i].notRotted = false;
 			addCount = false;
 		}
@@ -100,7 +100,6 @@ void AppleSpawning::UpdateApplesFSM(double dt)
 				{
 					countRot++;
 					addCount = true;
-					//appleVec[i].appleStates = ROTTING;
 				}
 			}
 			if (appleVec[i].randomProb > appleVec[i].probability)
@@ -109,7 +108,6 @@ void AppleSpawning::UpdateApplesFSM(double dt)
 				{
 					countNoRot++;
 					addCount = true;
-					//appleVec[i].appleStates = DECAYED;
 				}
 			}
 		}

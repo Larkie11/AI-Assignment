@@ -53,6 +53,7 @@ public:
 	void UpdateCastlenGuards(double dt, Vector3 enemyPosition);
 	int GetOpenCounter();
 	int GetCloseCounter();
+	int GetOpenProb();
 	int GetRandomInt();
 	int GetTempInt();
 	int GetDefenceCounter();

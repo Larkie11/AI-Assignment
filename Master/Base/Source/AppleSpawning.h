@@ -9,7 +9,6 @@ using std::vector;
 
 struct Apples
 {
-	
 	typedef enum ApplesStates
 	{
 		SPAWNING,
@@ -36,8 +35,8 @@ class AppleSpawning
 public:
 	vector<Apples> GetAppleVec();
 	vector<Vertex>GetTreeVec();
-	void Init();
-	void InitApples();
+	void Init(int probability);
+	void InitApples(int probability);
 	void InitTrees();
 	void RespawnApples();
 	void GetAppleState();
