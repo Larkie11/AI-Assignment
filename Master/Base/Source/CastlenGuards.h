@@ -33,11 +33,14 @@ struct Guards
 	Guard guardState;
 	vector<Vector3>GuardWaypointsOut;
 	vector<Vector3>GuardWaypointsIn;
+	vector<Vector3>archerwp;
 	Vector3 lastsavedposition;
 
 	Vector3 nextPoint;
 	int wayPointID;
 	bool changePos = false;
+	bool archerPos = false;
+	Vector3 archNextPoint;
 };
 class CastlenGuards
 {
@@ -53,6 +56,8 @@ public:
 	void UpdateCastlenGuards(double dt, Vector3 enemyPosition);
 	int GetOpenCounter();
 	int GetCloseCounter();
+	Guards GetArcher();
+	
 	int GetOpenProb();
 	int GetRandomInt();
 	int GetTempInt();
@@ -71,7 +76,9 @@ private:
 	Castle castleState;
 	Vector3 doorPos;
 	bool guardMoveLeft, stopGuard2Anim;
-	Guards guard1, guard2;
+	Guards guard1, guard2, archer;
+	bool archerout = false;
+	bool archArrived = false;
 	int close;
 	int open;
 	int defence;

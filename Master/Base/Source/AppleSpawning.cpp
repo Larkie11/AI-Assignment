@@ -129,3 +129,7 @@ void AppleSpawning::UpdateApplesFSM(double dt)
 		}
 	}
 }
+void AppleSpawning::SetAppleDespawn(int despawn, int appleid)
+{
+	this->appleVec[appleid].despawn = despawn;
+}

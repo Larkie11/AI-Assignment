@@ -41,6 +41,7 @@ public:
 	void RespawnApples();
 	void GetAppleState();
 	void UpdateApplesFSM(double dt);
+	void SetAppleDespawn(int despawn, int appleid);
 	AppleSpawning();
 	virtual ~AppleSpawning();
 	int countRot = 0;

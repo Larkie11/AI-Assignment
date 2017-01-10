@@ -64,9 +64,9 @@ void Scene1::InitFSM()
 	RandomMoveX = RandomInteger(-5, 5);
 	RandomMoveY = RandomInteger(-5, 5);
 	KSstate = LAZE;
-	KSpos.pos.Set(500, 300, 1);
+	KSpos.Set(500, 300, 1);
 
-	apples->Init(20);
+	apples->Init(40);
 	enemy->Init(Behavior::GOTOWP, Vector3(100, 100, 1), Vector3(100, 200, 1), 30);
 	castlePostion.Set(30, 300, 1);
 	testPosition.Set(30, 300, 1);
@@ -121,7 +121,7 @@ void Scene1::CastleFSMUpdate(double dt)
 		guards2->Update(dt);
 		guards2->m_anim->animActive = true;
 	}
-	castlenguards->UpdateCastlenGuards(dt,testPosition);
+	castlenguards->UpdateCastlenGuards(dt,KSpos);
 
 }
 
@@ -230,13 +230,13 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 
 	if (KSstate == MOVE)
 	{
-		if (KSpos.pos.x >= 0 && KSpos.pos.x <= 700)
+		if (KSpos.x >= 0 && KSpos.x <= 700)
 		{
-			KSpos.pos.x += RandomMoveX * dt;
+			KSpos.x += RandomMoveX * dt;
 		}
-		if (KSpos.pos.y >= 0 && KSpos.pos.y <= 300)
+		if (KSpos.y >= 0 && KSpos.y <= 300)
 		{
-			KSpos.pos.y += RandomMoveY * dt;
+			KSpos.y += RandomMoveY * dt;
 		}
 	}
 	else if (KSstate == EAT)
@@ -247,16 +247,17 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 		{
 			if (apples->GetAppleVec()[1].spawned)
 			{
-				d.x = apples->GetAppleVec()[1].position.x - KSpos.pos.x;
-				d.y = apples->GetAppleVec()[1].position.y - KSpos.pos.y;
-				if (KSpos.pos.x != apples->GetAppleVec()[1].position.x)
+				d.x = apples->GetAppleVec()[1].position.x - KSpos.x;
+				d.y = apples->GetAppleVec()[1].position.y - KSpos.y;
+				if (KSpos.x != apples->GetAppleVec()[1].position.x)
 				{
 
-					KSpos.pos.x += d.x * dt * 0.2f;
-					KSpos.pos.y += d.y * dt * 0.2f;
-					if (KSpos.pos.x >= apples->GetAppleVec()[1].position.x - 1 && KSpos.pos.x <= apples->GetAppleVec()[1].position.x + 1)
+					KSpos.x += d.x * dt * 0.2f;
+					KSpos.y += d.y * dt * 0.2f;
+					if (KSpos.x >= apples->GetAppleVec()[1].position.x - 1 && KSpos.x <= apples->GetAppleVec()[1].position.x + 1)
 					{
 						apples->GetAppleVec()[i].spawned = false;
+						apples->SetAppleDespawn(0, 1);
 						Hunger = 100;
 						KSstate = LAZE;
 					}
@@ -309,25 +310,25 @@ void Scene1::UpdateFSM(double dt)
 	SpawnAppleFSMUpdate(dt);
 	enemy->Update(dt, 50, 300, 200, 290);
 
-	float distance = (testPosition - Vector3(147, 371, 1)).LengthSquared();
-	distancetoenemy = (castlenguards->GetGuardList()[0].position - enemy->GetPosition()).LengthSquared();
-	distancetoenemy1 = (castlenguards->GetGuardList()[1].position - enemy->GetPosition()).LengthSquared();
-	directionenemy = (enemy->GetPosition() - castlenguards->GetGuardList()[0].position).Normalize();
-	directionenemy1 = (enemy->GetPosition() - castlenguards->GetGuardList()[1].position).Normalize();
+	float distance = (KSpos - Vector3(147, 371, 1)).LengthSquared();
+	distancetoenemy = (castlenguards->GetGuardList()[0].position - KSpos).LengthSquared();
+	distancetoenemy1 = (castlenguards->GetGuardList()[1].position - KSpos).LengthSquared();
+	directionenemy = (KSpos - castlenguards->GetGuardList()[0].position).Normalize();
+	directionenemy1 = (KSpos - castlenguards->GetGuardList()[1].position).Normalize();
 
 	if (distancetoenemy < 2000 && castlenguards->GetState() != Castle::CLOSE || distancetoenemy1 <2000 && castlenguards->GetState() != Castle::CLOSE)
 	{
-		enemy->SetState(Behavior::RUN);
-		testPosition = testPosition + directionenemy * 1.5;
-		enemy->SetPosition(testPosition);
+		//enemy->SetState(Behavior::RUN);
+		//testPosition = testPosition + directionenemy * 1.5;
+		//enemy->SetPosition(testPosition);
 	}
 
 	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
-	if (distance < 25000 && castlenguards->GetState() == Castle::OPEN)
+	if (distance < 1000000000 && castlenguards->GetState() == Castle::OPEN)
 	{
 		castlenguards->SetState(Castle::DEFENCE);
 	}
-	else if (distance > 25000 && castlenguards->GetState() == Castle::DEFENCE)
+	else if (distance > 1000000000 && castlenguards->GetState() == Castle::DEFENCE)
 	{
 		castlenguards->SetState(Castle::OPEN);
 	}
@@ -368,11 +369,19 @@ void Scene1::RenderFSM()
 		}
 		Render2DMeshWScale(castlenguards->GetGuardList()[i].guardMesh->GetNewMesh(), false, castlenguards->GetGuardList()[i].scale.x, castlenguards->GetGuardList()[i].scale.y, castlenguards->GetGuardList()[i].position.x, castlenguards->GetGuardList()[i].position.y, false);
 	}
-
+	//switch (castlenguards->GetArcher().guardState)
+	//{
+	//case Guards::IDLING:
+	//	castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+	//	break;
+	//case Guards::ATTACKING:
+	//	castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+	//	break;
+	//}
+	Render2DMeshWScale(meshList[GEO_GUARDS], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, castlenguards->GetArcher().position.x, castlenguards->GetArcher().position.y, false);
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, castlenguards->GetDoorPos().x, castlenguards->GetDoorPos().y, false);
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, castlePostion.x, castlePostion.y, false);
 
-	
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{
 		switch (apples->GetAppleVec()[i].appleStates)
@@ -411,13 +420,13 @@ void Scene1::RenderFSM()
 
 	//Render Kingslime
 	if (KSstate == IDLE)
-		Render2DMeshWScale(meshList[GEO_KSIDLE], false, 80, 50, KSpos.pos.x, KSpos.pos.y, false);
+		Render2DMeshWScale(meshList[GEO_KSIDLE], false, 80, 50, KSpos.x, KSpos.y, false);
 	else if (KSstate == MOVE || KSstate == EAT)
 	{
 		if (RandomMoveX < 0)
-			Render2DMeshWScale(meshList[GEO_KSMOVEL], false, 100, 80, KSpos.pos.x, KSpos.pos.y, false);
+			Render2DMeshWScale(meshList[GEO_KSMOVEL], false, 100, 80, KSpos.x, KSpos.y, false);
 		else
-			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.pos.x, KSpos.pos.y, false);
+			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.x, KSpos.y, false);
 	}
 
 	Render2DMeshWScale(meshList[GEO_VILLAGER], false, 20, 20, enemy->GetPosition().x, enemy->GetPosition().y, false);
@@ -484,7 +493,7 @@ void Scene1::RenderFSMText()
 
 	ss.str("");
 	ss << "KS Hunger: " << Hunger;
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 10);
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 10);
 	for (int i = 0; i < castlenguards->GetGuardList().size(); i++)
 	{
 		switch (castlenguards->GetGuardList()[i].guardState)
@@ -544,27 +553,27 @@ void Scene1::RenderFSMText()
 	case Scene1::LAZE:
 		ss.str("");
 		ss << "KS State:IDLING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 30);
 		break;
 	case Scene1::MOVE:
 		ss.str("");
 		ss << "KS State:MOVING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 30);
 		break;
 	case Scene1::CHASE:
 		ss.str("");
 		ss << "KS State:CHASING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 30);
 		break;
 	case Scene1::RUN:
 		ss.str("");
 		ss << "KS State:RUNNINIG";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 30);
 		break;
 	case Scene1::EAT:
 		ss.str("");
 		ss << "KS State:EATING";
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.pos.x, KSpos.pos.y - 30);
+		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 30);
 		break;
 	default:
 		break;

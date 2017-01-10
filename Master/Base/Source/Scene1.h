@@ -86,7 +86,7 @@ private:
 	int RandomMoveX;
 	int RandomMoveY;
 	KingSlime KSstate;
-	Vertex KSpos;
+	Vector3 KSpos;
 	Vector3 vel;
 	float p_speed;
 };

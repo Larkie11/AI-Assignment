@@ -6,6 +6,7 @@ Enemy enemy;
 CastlenGuards:: CastlenGuards()
 {
 	RandomInt = TempRandomInt = distance = openprob = open = close = defence = timer = 0;
+	
 	castleState = CLOSE;
 	arrived = false;
 	doorPos.SetZero();
@@ -47,6 +48,14 @@ void CastlenGuards::InitCastlenGuards(int probabilitytoopen)
 	guard2.stopAnimation = false;
 	guard2.guardState = Guards::IDLING;
 
+	archer.position.Set(155, 200, 1);
+	archer.archerwp.push_back(Vector3(155, 200, 1));
+	archer.archerwp.push_back(Vector3(230, 200, 1));
+	archer.wayPointID = 1;
+	archer.guardMesh = new ChangeMesh();
+	archer.scale.Set(30, 30, 1);
+	archer.stopAnimation = true;
+
 	guardList.push_back(guard1);
 	guardList.push_back(guard2);
 	openprob = probabilitytoopen;
@@ -58,6 +67,10 @@ float CastlenGuards::GetTimer()
 vector<Guards> CastlenGuards::GetGuardList()
 {
 	return guardList;
+}
+Guards CastlenGuards::GetArcher()
+{
+	return archer;
 }
 Vector3 CastlenGuards::GetDoorPos()
 {
@@ -124,8 +137,8 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 				}
 			}
 		}
-		
-		
+
+
 	}
 	else if (castleState == DEFENCE && addedCount)
 	{
@@ -264,6 +277,51 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 		{
 			doorPos.y++;
 		}
+		archerout = true;
+
+		archer.guardState = Guards::MOVINGOUT;
+
+		if (archer.changePos &&archer.wayPointID < 3)
+		{
+			archer.position = archer.archerwp[0];
+			archer.changePos = true;
+			archer.stopAnimation = false;
+			archer.wayPointID = 1;
+		}
+
+		if (archer.wayPointID >= archer.archerwp.size() - 1)
+		{
+			archer.guardState = Guards::ATTACKING;
+			archer.stopAnimation = true;
+			timer -= dt;
+		}
+		archer.nextPoint = archer.archerwp[archer.wayPointID];
+
+		if (archer.nextPoint != archer.position)
+		{
+			direction = (archer.nextPoint - archer.position).Normalize();
+		}
+		else
+		{
+			archer.stopAnimation = true;
+			archer.changePos = false;
+		}
+
+		distance = (archer.nextPoint - archer.position).LengthSquared();
+		if (distance < 0.1 && archer.wayPointID <= archer.archerwp.size() - 1)
+		{
+			archer.position = archer.nextPoint;
+			arrived = true;
+		}
+		else
+			archer.position = archer.position + direction* 0.7;
+
+		if (arrived && archer.wayPointID < archer.archerwp.size() - 1)
+		{
+			archer.wayPointID++;
+			arrived = false;
+		}
+
 		for (int i = 0; i < guardList.size(); i++)
 		{
 			guardList[i].lastsavedposition = guardList[i].position;
@@ -272,21 +330,15 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 
 			guardList[i].guardState = Guards::ATTACKING;
 			distance = (enemyPosition - guardList[i].position).LengthSquared();
-
-			if (guardList[i].position.y > 270)
-			{
-				guardList[i].position.y -= 0.5;
-			}
-			else
 			{
 				direction = (enemyPosition - guardList[i].position).Normalize();
 				guardList[i].position = guardList[i].position + direction* Math::RandFloatMinMax(0.1, 0.5);
 			}
 			guardList[i].stopAnimation = false;
-		}
 
-			break;
-		default:
-			break;
 		}
+		break;
+	default:
+		break;
+	}
 }
