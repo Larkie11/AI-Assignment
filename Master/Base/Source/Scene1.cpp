@@ -615,6 +615,10 @@ void Scene1::RenderFSMText()
 	ss.str("");
 	ss << "Apples Rot Probability " << apples->GetAppleVec()[0].probability;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.5, 0, 0.2), 20, 500, 570);
+
+	ss.str("");
+	ss << "From:" << castlenguards->GetMessageBoard()->GetFromLabel() << "  To:" << castlenguards->GetMessageBoard()->GetToLabel() << "  Msg:" << castlenguards->GetMessageBoard()->GetMsg();
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.7, 0.2, 0), 20, 0, 50);
 }
 
 

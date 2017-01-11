@@ -50,6 +50,7 @@
     <ClInclude Include="Source\Material.h" />
     <ClInclude Include="Source\Mesh.h" />
     <ClInclude Include="Source\MeshBuilder.h" />
+    <ClInclude Include="Source\MessageBoard.h" />
     <ClInclude Include="Source\Node.h" />
     <ClInclude Include="Source\Pathfinder.h" />
     <ClInclude Include="Source\Scene.h" />

@@ -3,6 +3,7 @@
 #include "Vector3.h"
 #include "ChangeMesh.h"
 #include "MyMath.h"
+#include "MessageBoard.h"
 #include <vector>
 
 using std::vector;
@@ -51,6 +52,7 @@ public:
 	Castle GetState();
 	vector<Guards>GetGuardList();
 	Vector3 GetDoorPos();
+	MessageBoard* GetMessageBoard();
 	
 	void InitCastlenGuards(int probabilitytoopen);
 	void UpdateCastlenGuards(double dt, Vector3 enemyPosition);
@@ -83,4 +85,5 @@ private:
 	int open;
 	int defence;
 	bool addedCount;
+	MessageBoard* mb;
 };
