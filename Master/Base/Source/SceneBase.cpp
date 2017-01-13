@@ -158,6 +158,10 @@ void SceneBase::Init()
 	meshList[GEO_ROTTENAPPLE]->textureID = LoadTGA("Image//AppleRot.tga");
 	meshList[GEO_DECAYAPPLE] = MeshBuilder::Generate2DMesh("sprite", Color(1, 1, 1), 100, 100, 1, 1);
 	meshList[GEO_DECAYAPPLE]->textureID = LoadTGA("Image//AppleDecay.tga");
+	meshList[GEO_ARCHERR] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 3);
+	meshList[GEO_ARCHERR]->textureID = LoadTGA("Image//ArcherR.tga");
+	meshList[GEO_ARCHERATT] = MeshBuilder::Generate2DMesh("sprite", Color(1, 1, 1), 100, 100, 1, 1);
+	meshList[GEO_ARCHERATT]->textureID = LoadTGA("Image//ArcherAttack.tga");
 	SpriteAnimation *castle = dynamic_cast<SpriteAnimation*>(meshList[GEO_CASTLE]);
 	if (castle)
 	{
@@ -188,6 +192,12 @@ void SceneBase::Init()
 	{
 		guardsUP->m_anim = new Animation();
 		guardsUP->m_anim->Set(0, 2, 1, 1, true);
+	}
+	SpriteAnimation *archerR = dynamic_cast<SpriteAnimation*>(meshList[GEO_ARCHERR]);
+	if (archerR)
+	{
+		archerR->m_anim = new Animation();
+		archerR->m_anim->Set(0, 2, 1, 1, true);
 	}
 	SpriteAnimation *villager = dynamic_cast<SpriteAnimation*>(meshList[GEO_VILLAGER]);
 	if (villager)

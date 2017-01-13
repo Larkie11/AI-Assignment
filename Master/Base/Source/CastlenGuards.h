@@ -42,6 +42,7 @@ struct Guards
 	bool changePos = false;
 	bool archerPos = false;
 	Vector3 archNextPoint;
+	bool arrived = false;
 };
 class CastlenGuards
 {

@@ -10,6 +10,7 @@
 #include "AppleSpawning.h"
 #include "CastlenGuards.h"
 #include "Enemy.h"
+#include "Bullet.h"
 
 class AppleSpawning;
 class Scene1 : public SceneBase
@@ -68,9 +69,12 @@ private:
 	bool addedCount = false;
 	float distancetoenemy = 0;
 	float distancetoenemy1 = 0;
-	Vector3 directionenemy;
-	Vector3 directionenemy1;
+	Vector3 directionenemy = Vector3(1,1,1);
+	Vector3 directionenemy1 = Vector3(1, 1, 1);
 
+	Bullet* shoot;
+	float cooldown = 3.f;
+	bool shot = false;
 	//Heal Point
 	int PP;
 	int PPcounter;

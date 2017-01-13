@@ -12,6 +12,7 @@
 Scene1::Scene1()
 : m_cMap(NULL)
 {
+	shoot = new Bullet();
 }
 
 Scene1::~Scene1()
@@ -45,6 +46,7 @@ void Scene1::Init()
 	m_cMap = new CMap();
 	m_cMap->Init(Application::GetInstance().GetScreenHeight(), Application::GetInstance().GetScreenWidth(), 32);
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
+	shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy / 100);
 }
 
 void Scene1::InitFSM()
@@ -109,6 +111,12 @@ void Scene1::CastleFSMUpdate(double dt)
 		villager->Update(dt);
 		villager->m_anim->animActive = true;
 	}
+	SpriteAnimation *archerR = dynamic_cast<SpriteAnimation*>(meshList[GEO_ARCHERR]);
+	if (archerR && !castlenguards->GetArcher().stopAnimation)
+	{
+		archerR->Update(dt);
+		archerR->m_anim->animActive = true;
+	}
 	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(castlenguards->GetGuardList()[0].guardMesh->GetNewMesh());
 	if (guards && !castlenguards->GetGuardList()[0].stopAnimation)
 	{
@@ -123,6 +131,15 @@ void Scene1::CastleFSMUpdate(double dt)
 	}
 	castlenguards->UpdateCastlenGuards(dt,KSpos);
 
+	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
+	{
+		if (!shot)
+		{
+			shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy / 1000);
+			shot = true;
+		}
+		shoot->Update(dt);
+	}
 }
 
 void Scene1::HealPointFSMUpdate(double dt)
@@ -313,7 +330,10 @@ void Scene1::UpdateFSM(double dt)
 	float distance = (KSpos - Vector3(147, 371, 1)).LengthSquared();
 	distancetoenemy = (castlenguards->GetGuardList()[0].position - KSpos).LengthSquared();
 	distancetoenemy1 = (castlenguards->GetGuardList()[1].position - KSpos).LengthSquared();
+
+	if (directionenemy!= Vector3( 0,0,0))
 	directionenemy = (KSpos - castlenguards->GetGuardList()[0].position).Normalize();
+	if (directionenemy1 != Vector3(0, 0, 0))
 	directionenemy1 = (KSpos - castlenguards->GetGuardList()[1].position).Normalize();
 
 	if (distancetoenemy < 2000 && castlenguards->GetState() != Castle::CLOSE || distancetoenemy1 <2000 && castlenguards->GetState() != Castle::CLOSE)
@@ -369,18 +389,26 @@ void Scene1::RenderFSM()
 		}
 		Render2DMeshWScale(castlenguards->GetGuardList()[i].guardMesh->GetNewMesh(), false, castlenguards->GetGuardList()[i].scale.x, castlenguards->GetGuardList()[i].scale.y, castlenguards->GetGuardList()[i].position.x, castlenguards->GetGuardList()[i].position.y, false);
 	}
-	//switch (castlenguards->GetArcher().guardState)
-	//{
-	//case Guards::IDLING:
-	//	castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-	//	break;
-	//case Guards::ATTACKING:
-	//	castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
-	//	break;
-	//}
-	Render2DMeshWScale(meshList[GEO_GUARDS], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, castlenguards->GetArcher().position.x, castlenguards->GetArcher().position.y, false);
+	switch (castlenguards->GetArcher().guardState)
+	{
+	case Guards::IDLING:
+		castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		break;
+	case Guards::MOVINGOUT:
+		castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_ARCHERR]);
+		break;
+	case Guards::ATTACKING:
+		castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_ARCHERATT]);
+		break;
+	}
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, castlenguards->GetDoorPos().x, castlenguards->GetDoorPos().y, false);
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, castlePostion.x, castlePostion.y, false);
+	
+	if (castlenguards->GetArcher().guardState != Guards::IDLING)
+	Render2DMeshWScale(castlenguards->GetArcher().guardMesh->GetNewMesh(), false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, castlenguards->GetArcher().position.x, castlenguards->GetArcher().position.y, false);
+
+	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
+		Render2DMeshWScale(meshList[GEO_APPLES], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, shoot->GetPosition().x, shoot->GetPosition().y, false);
 
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{

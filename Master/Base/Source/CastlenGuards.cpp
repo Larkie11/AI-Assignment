@@ -54,13 +54,14 @@ void CastlenGuards::InitCastlenGuards(int probabilitytoopen)
 	guard2.stopAnimation = false;
 	guard2.guardState = Guards::IDLING;
 
-	archer.position.Set(155, 200, 1);
-	archer.archerwp.push_back(Vector3(155, 200, 1));
-	archer.archerwp.push_back(Vector3(230, 200, 1));
+	archer.position.Set(170, 350, 1);
+	archer.archerwp.push_back(Vector3(170, 350, 1));
+	archer.archerwp.push_back(Vector3(230, 350, 1));
 	archer.wayPointID = 1;
 	archer.guardMesh = new ChangeMesh();
+	archer.guardState = Guards::IDLING;
 	archer.scale.Set(30, 30, 1);
-	archer.stopAnimation = true;
+	archer.stopAnimation = false;
 
 	guardList.push_back(guard1);
 	guardList.push_back(guard2);
@@ -286,69 +287,130 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 		if (mb->GetMsg() == "Archer to station please")
 		{
 			archerout = true;
-
-			archer.guardState = Guards::MOVINGOUT;
-
-			if (archer.changePos &&archer.wayPointID < 3)
+			if (archerout)
 			{
-				archer.position = archer.archerwp[0];
-				archer.changePos = true;
-				archer.stopAnimation = false;
-				archer.wayPointID = 1;
-			}
+				archer.guardState = Guards::MOVINGOUT;
 
-			if (archer.wayPointID >= archer.archerwp.size() - 1)
-			{
-				archer.guardState = Guards::ATTACKING;
-				archer.stopAnimation = true;
-				timer -= dt;
-			}
-			archer.nextPoint = archer.archerwp[archer.wayPointID];
+				if (archer.changePos && archer.wayPointID < archer.archerwp.size() - 1)
+				{
+					archer.position = archer.archerwp[0];
+					archer.changePos = true;
+					archer.stopAnimation = false;
+					archer.wayPointID = 1;
+				}
 
-			if (archer.nextPoint != archer.position)
-			{
-				direction = (archer.nextPoint - archer.position).Normalize();
-			}
-			else
-			{
-				archer.stopAnimation = true;
-				archer.changePos = false;
-			}
+				if (archer.wayPointID >= archer.archerwp.size())
+				{
+					archer.stopAnimation = true;
+					timer -= dt;
+				}
+				archer.nextPoint = archer.archerwp[archer.wayPointID];
 
-			distance = (archer.nextPoint - archer.position).LengthSquared();
-			if (distance < 0.1 && archer.wayPointID <= archer.archerwp.size() - 1)
-			{
-				archer.position = archer.nextPoint;
-				arrived = true;
-			}
-			else
-				archer.position = archer.position + direction* 0.7;
+				if (archer.nextPoint != archer.position)
+				{
+					direction = (archer.nextPoint - archer.position).Normalize();
+				}
+				else
+				{
+					archer.stopAnimation = true;
+					archer.changePos = false;
+					mb->SetMessage("Done");
+					archer.guardState = Guards::ATTACKING;
+				}
 
-			if (arrived && archer.wayPointID < archer.archerwp.size() - 1)
-			{
-				archer.wayPointID++;
-				arrived = false;
+				distance = (archer.nextPoint - archer.position).LengthSquared();
+				if (distance < 0.1 && archer.wayPointID <= archer.archerwp.size() - 1)
+				{
+					archer.position = archer.nextPoint;
+					archer.arrived = true;
+				}
+				else
+					archer.position = archer.position + direction* 0.7;
+
+				if (archer.arrived && archer.wayPointID < archer.archerwp.size() - 1)
+				{
+					archer.wayPointID++;
+					archer.arrived = false;
+				}
 			}
 		}
-
+		if (doorPos.y <= 350)
+		{
+			doorPos.y++;
+		}
 		for (int i = 0; i < guardList.size(); i++)
 		{
-			mb->SetFromLabel("Guards");
-			mb->SetToLabel("Archer");
-			mb->SetMessage("Archer to station please");
-			guardList[i].lastsavedposition = guardList[i].position;
-			if (guardList[i].wayPointID == 1)
-				guardList[i].wayPointID = 2;
 
-			guardList[i].guardState = Guards::ATTACKING;
-			distance = (enemyPosition - guardList[i].position).LengthSquared();
+			if (!guardList[i].changePos && guardList[i].wayPointID < 3)
 			{
-				direction = (enemyPosition - guardList[i].position).Normalize();
-				guardList[i].position = guardList[i].position + direction* Math::RandFloatMinMax(0.1, 0.5);
+				guardList[i].position = guardList[i].GuardWaypointsOut[0];
+				guardList[i].changePos = true;
+				guardList[i].stopAnimation = false;
+				guardList[i].wayPointID = 1;
 			}
-			guardList[i].stopAnimation = false;
 
+			if (guardList[i].wayPointID >= 3)
+			{
+				guardList[i].guardState = Guards::ATTACKING;
+			}
+			else
+			{
+				guardList[i].guardState = Guards::MOVINGD;
+			}
+			if (guardList[i].guardState == Guards::ATTACKING)
+			{
+				if (mb->GetMsg() == "Nil")
+				{
+					mb->SetFromLabel("Guards");
+					mb->SetToLabel("Archer");
+					mb->SetMessage("Archer to station please");
+				}
+				guardList[i].lastsavedposition = guardList[i].position;
+				if (guardList[i].wayPointID == 1)
+					guardList[i].wayPointID = 2;
+
+				distance = (enemyPosition - guardList[i].position).LengthSquared();
+				{
+					direction = (enemyPosition - guardList[i].position).Normalize();
+					guardList[i].position = guardList[i].position + direction* Math::RandFloatMinMax(0.7,1.5);
+				}
+				guardList[i].stopAnimation = false;
+			}
+			else
+			{
+				guardList[i].nextPoint = guardList[i].GuardWaypointsOut[guardList[i].wayPointID];
+
+				if (guardList[i].nextPoint != guardList[i].position)
+				{
+					direction = (guardList[i].nextPoint - guardList[i].position).Normalize();
+				}
+				else
+				{
+					guardList[i].stopAnimation = true;
+					guardList[i].changePos = false;
+				}
+
+				distance = (guardList[i].nextPoint - guardList[i].position).LengthSquared();
+				if (distance < 0.1 && guardList[i].wayPointID <= guardList[i].GuardWaypointsOut.size() < 3)
+				{
+					guardList[i].position = guardList[i].nextPoint;
+					arrived = true;
+				}
+				else
+					guardList[i].position = guardList[i].position + direction* 0.7;
+
+				if (arrived && guardList[i].wayPointID < guardList[i].GuardWaypointsOut.size() < 3)
+				{
+					guardList[i].wayPointID++;
+					arrived = false;
+				}
+			}
 		}
+		/*for (int i = 0; i < guardList.size(); i++)
+		{
+			
+
+		}*/
 		break;
 	default:
 		break;
