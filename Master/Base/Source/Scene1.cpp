@@ -262,19 +262,19 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 
 		for (int i = 0; i < apples->GetAppleVec().size(); i++)
 		{
-			if (apples->GetAppleVec()[1].spawned)
+			if (apples->GetAppleVec()[0].spawned)
 			{
-				d.x = apples->GetAppleVec()[1].position.x - KSpos.x;
-				d.y = apples->GetAppleVec()[1].position.y - KSpos.y;
-				if (KSpos.x != apples->GetAppleVec()[1].position.x)
+				d.x = apples->GetAppleVec()[0].position.x - KSpos.x;
+				d.y = apples->GetAppleVec()[0].position.y - KSpos.y;
+				if (KSpos.x != apples->GetAppleVec()[0].position.x)
 				{
 
 					KSpos.x += d.x * dt * 0.2f;
 					KSpos.y += d.y * dt * 0.2f;
-					if (KSpos.x >= apples->GetAppleVec()[1].position.x - 1 && KSpos.x <= apples->GetAppleVec()[1].position.x + 1)
+					if (KSpos.x >= apples->GetAppleVec()[0].position.x - 1 && KSpos.x <= apples->GetAppleVec()[0].position.x + 1)
 					{
-						apples->GetAppleVec()[i].spawned = false;
-						apples->SetAppleDespawn(0, 1);
+						apples->GetAppleVec()[0].spawned = false;
+						apples->SetAppleDespawn(0, 0);
 						Hunger = 100;
 						KSstate = LAZE;
 					}
@@ -296,21 +296,21 @@ void Scene1::Update(double dt)
 	UpdateFSM(dt);
 	if (Application::IsKeyPressed('W'))
 	{
-		testPosition.y++;
-	}
-	if (Application::IsKeyPressed('A'))
-	{
-		testPosition.x--;
-
+		castlenguards->MinusHealth(2, 0);
 	}
 	if (Application::IsKeyPressed('S'))
 	{
-		testPosition.y--;
+		castlenguards->SetHealth(100,0);
 
+	}
+	if (Application::IsKeyPressed('A'))
+	{
+		castlenguards->MinusHealth(2, 1);
 	}
 	if (Application::IsKeyPressed('D'))
 	{
-		testPosition.x++;
+		castlenguards->SetHealth(100, 1);
+
 	}
 	fps = (float)(1.f / dt);
 }
@@ -321,7 +321,16 @@ void Scene1::UpdateFSM(double dt)
 	{
 		testPosition = enemy->GetPosition();
 	}
+	if (castlenguards->GetGuardList()[0].health <= 0)
+		castlenguards->GetGuardList()[0].health = 100;
+	else
+	{
+
+	}
+
 	CastleFSMUpdate(dt);
+	
+
 	HealPointFSMUpdate(dt);
 	KingSlimeFSMUpdate(dt);
 	SpawnAppleFSMUpdate(dt);
@@ -361,8 +370,9 @@ int Scene1::RandomInteger(int lowerLimit, int upperLimit)
 
 void Scene1::RenderFSM()
 {
+	
 	for (int i = 0; i < castlenguards->GetGuardList().size(); i++)
-	{
+	{		
 		switch (castlenguards -> GetGuardList()[i].guardState)
 		{
 		case Guards::IDLING:
@@ -531,20 +541,22 @@ void Scene1::RenderFSMText()
 			ss << "IDLING";
 			break;
 		case Guards::MOVINGD:
-			ss.str("");
-			ss << "DOWN";
-			break;
 		case Guards::MOVINGUP:
-			ss.str("");
-			ss << "UP";
-			break;
 		case Guards::MOVINGL:
-			ss.str("");
-			ss << "LEFT";
-			break;
 		case Guards::MOVINGR:
 			ss.str("");
-			ss << "RIGHT";
+			if (castlenguards->GetState() == Castle::OPEN)
+			{
+				ss << "MOVING OUT";
+			}
+			else if (castlenguards->GetState() == Castle::DEFENCE)
+			{
+				ss << "MOVING TO TARGET";
+			}
+			else if (castlenguards->GetState() == Castle::CLOSE)
+			{
+				ss << "MOVING IN";
+			}
 			break;
 		case Guards::GUARDING:
 			ss.str("");

@@ -1,6 +1,7 @@
 #include "CastlenGuards.h"
 #include <iostream>
 #include "Enemy.h"
+#include <sstream>
 
 Enemy enemy;
 
@@ -114,6 +115,15 @@ int CastlenGuards::GetRandomInt()
 int CastlenGuards::GetTempInt()
 {
 	return TempRandomInt;
+}
+void CastlenGuards::SetHealth(int i, int whichguard)
+{
+	guardList[whichguard].health = i;
+}
+void CastlenGuards::MinusHealth(int i, int whichguard)
+{
+	if (guardList[whichguard].health > 0)
+	guardList[whichguard].health -= i;
 }
 void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 {
@@ -287,51 +297,71 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 		if (mb->GetMsg() == "Archer to station please")
 		{
 			archerout = true;
-			if (archerout)
+		}
+		if (archerout)
+		{
+			archer.guardState = Guards::MOVINGOUT;
+
+			
+
+			if (archer.changePos && archer.wayPointID < archer.archerwp.size() - 1)
 			{
-				archer.guardState = Guards::MOVINGOUT;
+				archer.position = archer.archerwp[0];
+				archer.changePos = true;
+				archer.stopAnimation = false;
+				archer.wayPointID = 1;
+			}
 
-				if (archer.changePos && archer.wayPointID < archer.archerwp.size() - 1)
+			if (archer.wayPointID >= archer.archerwp.size())
+			{
+				archer.stopAnimation = true;
+				timer -= dt;
+			}
+			archer.nextPoint = archer.archerwp[archer.wayPointID];
+
+			if (archer.nextPoint != archer.position)
+			{
+				direction = (archer.nextPoint - archer.position).Normalize();
+			}
+			else
+			{
+				archer.stopAnimation = true;
+				archer.changePos = false;
+				archer.guardState = Guards::ATTACKING;
+
+				for (int i = 0; i < guardList.size(); i++)
 				{
-					archer.position = archer.archerwp[0];
-					archer.changePos = true;
-					archer.stopAnimation = false;
-					archer.wayPointID = 1;
+					if (guardList[i].health <= 0)
+					{
+						mb->SetFromLabel("Archer");
+						mb->SetToLabel("Guard"); 
+						std::ostringstream oss;
+						oss << "Replacement for guard " << i << " please";
+						mb->SetMessage(oss.str());
+						guardList[i].position = guardList[i].GuardWaypointsOut[0];
+						guardList[i].wayPointID = 1;
+					}
+					if (guardList[0].health >0 && guardList[1].health > 0)
+					{
+						//mb->Reset();
+					}
 				}
 
-				if (archer.wayPointID >= archer.archerwp.size())
-				{
-					archer.stopAnimation = true;
-					timer -= dt;
-				}
-				archer.nextPoint = archer.archerwp[archer.wayPointID];
+			}
 
-				if (archer.nextPoint != archer.position)
-				{
-					direction = (archer.nextPoint - archer.position).Normalize();
-				}
-				else
-				{
-					archer.stopAnimation = true;
-					archer.changePos = false;
-					mb->SetMessage("Done");
-					archer.guardState = Guards::ATTACKING;
-				}
+			distance = (archer.nextPoint - archer.position).LengthSquared();
+			if (distance < 0.1 && archer.wayPointID <= archer.archerwp.size() - 1)
+			{
+				archer.position = archer.nextPoint;
+				archer.arrived = true;
+			}
+			else
+				archer.position = archer.position + direction* 0.7;
 
-				distance = (archer.nextPoint - archer.position).LengthSquared();
-				if (distance < 0.1 && archer.wayPointID <= archer.archerwp.size() - 1)
-				{
-					archer.position = archer.nextPoint;
-					archer.arrived = true;
-				}
-				else
-					archer.position = archer.position + direction* 0.7;
-
-				if (archer.arrived && archer.wayPointID < archer.archerwp.size() - 1)
-				{
-					archer.wayPointID++;
-					archer.arrived = false;
-				}
+			if (archer.arrived && archer.wayPointID < archer.archerwp.size() - 1)
+			{
+				archer.wayPointID++;
+				archer.arrived = false;
 			}
 		}
 		if (doorPos.y <= 350)
@@ -340,7 +370,15 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 		}
 		for (int i = 0; i < guardList.size(); i++)
 		{
-
+			if (guardList[0].health <= 0 && mb->GetMsg() == "Replacement for guard 0 please")
+			{
+				guardList[0].health = 100;
+			}
+			if (guardList[1].health <= 0 && mb->GetMsg() == "Replacement for guard 1 please")
+			{
+				guardList[1].health = 100;
+			}
+			std::cout << guardList[i].health << std::endl;
 			if (!guardList[i].changePos && guardList[i].wayPointID < 3)
 			{
 				guardList[i].position = guardList[i].GuardWaypointsOut[0];
@@ -359,7 +397,7 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 			}
 			if (guardList[i].guardState == Guards::ATTACKING)
 			{
-				if (mb->GetMsg() == "Nil")
+				if (mb->GetMsg() == "Nil" && archer.guardState != Guards::ATTACKING)
 				{
 					mb->SetFromLabel("Guards");
 					mb->SetToLabel("Archer");
@@ -371,8 +409,17 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 
 				distance = (enemyPosition - guardList[i].position).LengthSquared();
 				{
+					if (guardList[i].position.x <= enemyPosition.x)
+						guardList[i].guardState = Guards::MOVINGR;
+					else
+						guardList[i].guardState = Guards::MOVINGL;
+
 					direction = (enemyPosition - guardList[i].position).Normalize();
-					guardList[i].position = guardList[i].position + direction* Math::RandFloatMinMax(0.7,1.5);
+					if (distance > 400)
+						guardList[i].position = (guardList[i].position + direction* Math::RandFloatMinMax(0.7, 1.5));
+
+					if (distance < 500)
+						guardList[i].guardState = Guards::ATTACKING;
 				}
 				guardList[i].stopAnimation = false;
 			}

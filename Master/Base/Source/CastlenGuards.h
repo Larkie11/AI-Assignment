@@ -43,6 +43,7 @@ struct Guards
 	bool archerPos = false;
 	Vector3 archNextPoint;
 	bool arrived = false;
+	int health =50;
 };
 class CastlenGuards
 {
@@ -54,7 +55,8 @@ public:
 	vector<Guards>GetGuardList();
 	Vector3 GetDoorPos();
 	MessageBoard* GetMessageBoard();
-	
+	void SetHealth(int i, int whichguard);
+	void MinusHealth(int i, int whichguard);
 	void InitCastlenGuards(int probabilitytoopen);
 	void UpdateCastlenGuards(double dt, Vector3 enemyPosition);
 	int GetOpenCounter();
