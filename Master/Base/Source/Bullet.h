@@ -14,4 +14,7 @@ public:
 	Vector3 pos;
 	Vector3 vel;
 	Vector3 target;
+	
+private:
+	float positiontill;
 };

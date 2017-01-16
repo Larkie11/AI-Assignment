@@ -3,7 +3,6 @@
 Bullet::Bullet()
 {
 	gravity.Set(0, -9.8, 0);
-	vel.Set(209, 0, 0);
 }
 
 Bullet::~Bullet()
@@ -12,6 +11,7 @@ Bullet::~Bullet()
 }
 void Bullet::SetPosition(Vector3 pos, Vector3 distance)
 {
+	vel.SetZero();
 	vel = distance;
 	this->pos = pos;
 }

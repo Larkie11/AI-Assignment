@@ -378,7 +378,7 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 			{
 				guardList[1].health = 100;
 			}
-			std::cout << guardList[i].health << std::endl;
+			//std::cout << guardList[i].health << std::endl;
 			if (!guardList[i].changePos && guardList[i].wayPointID < 3)
 			{
 				guardList[i].position = guardList[i].GuardWaypointsOut[0];
@@ -397,7 +397,7 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 			}
 			if (guardList[i].guardState == Guards::ATTACKING)
 			{
-				if (mb->GetMsg() == "Nil" && archer.guardState != Guards::ATTACKING)
+				if (archer.guardState != Guards::ATTACKING)
 				{
 					mb->SetFromLabel("Guards");
 					mb->SetToLabel("Archer");

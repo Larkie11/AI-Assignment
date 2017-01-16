@@ -26,6 +26,7 @@
     <ClCompile Include="Source\Map.cpp" />
     <ClCompile Include="Source\Mesh.cpp" />
     <ClCompile Include="Source\MeshBuilder.cpp" />
+    <ClCompile Include="Source\MessageBoard.cpp" />
     <ClCompile Include="Source\Pathfinder.cpp" />
     <ClCompile Include="Source\Scene1.cpp" />
     <ClCompile Include="Source\SceneBase.cpp" />

@@ -46,7 +46,6 @@ void Scene1::Init()
 	m_cMap = new CMap();
 	m_cMap->Init(Application::GetInstance().GetScreenHeight(), Application::GetInstance().GetScreenWidth(), 32);
 	m_cMap->LoadMap("Data//MapData_WM2.csv");
-	shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy / 100);
 }
 
 void Scene1::InitFSM()
@@ -73,7 +72,7 @@ void Scene1::InitFSM()
 	castlePostion.Set(30, 300, 1);
 	testPosition.Set(30, 300, 1);
 	castleScale.Set(250, 250, 1);
-	castlenguards->InitCastlenGuards(30);
+	castlenguards->InitCastlenGuards(80);
 	directionenemy.SetZero();
 	directionenemy1.SetZero();
 	testPosition = enemy->GetPosition();
@@ -135,7 +134,9 @@ void Scene1::CastleFSMUpdate(double dt)
 	{
 		if (!shot)
 		{
-			shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy / 1000);
+			float distancetoenemy2 = (castlenguards->GetArcher().position - KSpos).LengthSquared();
+			cout << "dist" << distancetoenemy2 << endl;
+			shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2 / 1000);
 			shot = true;
 		}
 		shoot->Update(dt);
@@ -311,6 +312,13 @@ void Scene1::Update(double dt)
 	{
 		castlenguards->SetHealth(100, 1);
 
+	}		
+	
+	//cout << shoot->vel << " " << shoot->pos << " " << shoot->gravity << endl;
+
+	if (shoot->GetPosition().y < KSpos.y)
+	{
+		shot = false;
 	}
 	fps = (float)(1.f / dt);
 }
@@ -527,7 +535,7 @@ void Scene1::RenderFSMText()
 	default:
 		break;
 	}
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, enemy->GetPosition().x, enemy->GetPosition().y - 20);
+	//RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, enemy->GetPosition().x, enemy->GetPosition().y - 20);
 
 	ss.str("");
 	ss << "KS Hunger: " << Hunger;
@@ -645,7 +653,7 @@ void Scene1::RenderFSMText()
 		default:
 			break;
 		}
-		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, apples->GetAppleVec()[i].position.x-50, apples->GetAppleVec()[i].position.y - x);
+		//RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 1), 20, apples->GetAppleVec()[i].position.x-50, apples->GetAppleVec()[i].position.y - x);
 
 	}
 	ss.str("");

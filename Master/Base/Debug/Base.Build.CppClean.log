@@ -1,31 +1,27 @@
-c:\users\wm\documents\ai\master\base\debug\vc120.pdb
-c:\users\wm\documents\ai\master\base\debug\vc120.idb
-c:\users\wm\documents\ai\master\base\debug\application.obj
-c:\users\wm\documents\ai\master\base\debug\camera.obj
-c:\users\wm\documents\ai\master\base\debug\camera3.obj
-c:\users\wm\documents\ai\master\base\debug\castlenguards.obj
-c:\users\wm\documents\ai\master\base\debug\changemesh.obj
-c:\users\wm\documents\ai\master\base\debug\enemy.obj
-c:\users\wm\documents\ai\master\base\debug\gameobject.obj
-c:\users\wm\documents\ai\master\base\debug\loadobj.obj
-c:\users\wm\documents\ai\master\base\debug\loadtga.obj
-c:\users\wm\documents\ai\master\base\debug\main.obj
-c:\users\wm\documents\ai\master\base\debug\map.obj
-c:\users\wm\documents\ai\master\base\debug\mesh.obj
-c:\users\wm\documents\ai\master\base\debug\meshbuilder.obj
-c:\users\wm\documents\ai\master\base\debug\pathfinder.obj
-c:\users\wm\documents\ai\master\base\debug\scene1.obj
-c:\users\wm\documents\ai\master\base\debug\scenebase.obj
-c:\users\wm\documents\ai\master\base\debug\shader.obj
-c:\users\wm\documents\ai\master\base\debug\soundmanager.obj
-c:\users\wm\documents\ai\master\base\debug\spriteanimation.obj
-c:\users\wm\documents\ai\master\base\debug\utility.obj
-c:\users\wm\documents\ai\master\base\debug\applespawning.obj
-c:\users\wm\documents\ai\master\debug\base.exe
-c:\users\wm\documents\ai\master\debug\base.pdb
-c:\users\wm\documents\ai\master\base\debug\base.tlog\cl.command.1.tlog
-c:\users\wm\documents\ai\master\base\debug\base.tlog\cl.read.1.tlog
-c:\users\wm\documents\ai\master\base\debug\base.tlog\cl.write.1.tlog
-c:\users\wm\documents\ai\master\base\debug\base.tlog\link.command.1.tlog
-c:\users\wm\documents\ai\master\base\debug\base.tlog\link.read.1.tlog
-c:\users\wm\documents\ai\master\base\debug\base.tlog\link.write.1.tlog
+c:\users\155208u\desktop\new folder\base\debug\vc120.pdb
+c:\users\155208u\desktop\new folder\base\debug\vc120.idb
+c:\users\155208u\desktop\new folder\base\debug\camera.obj
+c:\users\155208u\desktop\new folder\base\debug\camera3.obj
+c:\users\155208u\desktop\new folder\base\debug\castlenguards.obj
+c:\users\155208u\desktop\new folder\base\debug\changemesh.obj
+c:\users\155208u\desktop\new folder\base\debug\enemy.obj
+c:\users\155208u\desktop\new folder\base\debug\gameobject.obj
+c:\users\155208u\desktop\new folder\base\debug\loadobj.obj
+c:\users\155208u\desktop\new folder\base\debug\loadtga.obj
+c:\users\155208u\desktop\new folder\base\debug\main.obj
+c:\users\155208u\desktop\new folder\base\debug\map.obj
+c:\users\155208u\desktop\new folder\base\debug\mesh.obj
+c:\users\155208u\desktop\new folder\base\debug\meshbuilder.obj
+c:\users\155208u\desktop\new folder\base\debug\pathfinder.obj
+c:\users\155208u\desktop\new folder\base\debug\scene1.obj
+c:\users\155208u\desktop\new folder\base\debug\scenebase.obj
+c:\users\155208u\desktop\new folder\base\debug\shader.obj
+c:\users\155208u\desktop\new folder\base\debug\soundmanager.obj
+c:\users\155208u\desktop\new folder\base\debug\spriteanimation.obj
+c:\users\155208u\desktop\new folder\base\debug\utility.obj
+c:\users\155208u\desktop\new folder\base\debug\applespawning.obj
+c:\users\155208u\desktop\new folder\base\debug\application.obj
+c:\users\155208u\desktop\new folder\base\debug\bullet.obj
+c:\users\155208u\desktop\new folder\base\debug\base.tlog\cl.command.1.tlog
+c:\users\155208u\desktop\new folder\base\debug\base.tlog\cl.read.1.tlog
+c:\users\155208u\desktop\new folder\base\debug\base.tlog\cl.write.1.tlog
