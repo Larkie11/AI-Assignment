@@ -134,9 +134,18 @@ void Scene1::CastleFSMUpdate(double dt)
 	{
 		if (!shot)
 		{
-			float distancetoenemy2 = (castlenguards->GetArcher().position - KSpos).LengthSquared();
-			cout << "dist" << distancetoenemy2 << endl;
-			shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2 / 1000);
+			if (castlenguards->GetArcher().position.x < KSpos.x)
+			{
+				float distancetoenemy2 = (castlenguards->GetArcher().position - KSpos).LengthSquared();
+				//cout << "dist" << distancetoenemy2 << endl;
+				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2 / 1000);
+			}
+			else
+			{
+				float distancetoenemy2 = (KSpos - castlenguards->GetArcher().position).LengthSquared();
+				//cout << "dist" << distancetoenemy2 << endl;
+				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 1000));
+			}
 			shot = true;
 		}
 		shoot->Update(dt);

@@ -338,8 +338,6 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 						std::ostringstream oss;
 						oss << "Replacement for guard " << i << " please";
 						mb->SetMessage(oss.str());
-						guardList[i].position = guardList[i].GuardWaypointsOut[0];
-						guardList[i].wayPointID = 1;
 					}
 					if (guardList[0].health >0 && guardList[1].health > 0)
 					{
@@ -373,10 +371,14 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 			if (guardList[0].health <= 0 && mb->GetMsg() == "Replacement for guard 0 please")
 			{
 				guardList[0].health = 100;
+				guardList[0].position = guardList[i].GuardWaypointsOut[0];
+				guardList[0].wayPointID = 1;
 			}
 			if (guardList[1].health <= 0 && mb->GetMsg() == "Replacement for guard 1 please")
 			{
 				guardList[1].health = 100;
+				guardList[1].position = guardList[i].GuardWaypointsOut[0];
+				guardList[1].wayPointID = 1;
 			}
 			//std::cout << guardList[i].health << std::endl;
 			if (!guardList[i].changePos && guardList[i].wayPointID < 3)

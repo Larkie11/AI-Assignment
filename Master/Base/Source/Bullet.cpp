@@ -25,5 +25,6 @@ void Bullet::SetTarget(Vector3 pos)
 void Bullet::Update(double dt)
 {
 	vel += gravity * dt;
-	pos += vel * dt;
+	pos.x += vel.x * dt;
+	pos.y += gravity.y *dt;
 }
