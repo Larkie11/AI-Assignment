@@ -138,13 +138,13 @@ void Scene1::CastleFSMUpdate(double dt)
 			{
 				float distancetoenemy2 = (castlenguards->GetArcher().position - KSpos).LengthSquared();
 				//cout << "dist" << distancetoenemy2 << endl;
-				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2 / 1000);
+				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2 / 800);
 			}
 			else
 			{
 				float distancetoenemy2 = (KSpos - castlenguards->GetArcher().position).LengthSquared();
 				//cout << "dist" << distancetoenemy2 << endl;
-				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 1000));
+				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 800));
 			}
 			shot = true;
 		}
@@ -370,11 +370,11 @@ void Scene1::UpdateFSM(double dt)
 	}
 
 	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
-	if (distance < 1000000000 && castlenguards->GetState() == Castle::OPEN)
+	if (distance < 1000000 && castlenguards->GetState() == Castle::OPEN)
 	{
 		castlenguards->SetState(Castle::DEFENCE);
 	}
-	else if (distance > 1000000000 && castlenguards->GetState() == Castle::DEFENCE)
+	else if (distance > 1000000 && castlenguards->GetState() == Castle::DEFENCE)
 	{
 		castlenguards->SetState(Castle::OPEN);
 	}
@@ -431,11 +431,13 @@ void Scene1::RenderFSM()
 	Render2DMeshWScale(meshList[GEO_DOOR], false, 250, 250, castlenguards->GetDoorPos().x, castlenguards->GetDoorPos().y, false);
 	Render2DMeshWScale(meshList[GEO_CASTLE], false, 250, 250, castlePostion.x, castlePostion.y, false);
 	
-	if (castlenguards->GetArcher().guardState != Guards::IDLING)
-	Render2DMeshWScale(castlenguards->GetArcher().guardMesh->GetNewMesh(), false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, castlenguards->GetArcher().position.x, castlenguards->GetArcher().position.y, false);
 
 	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
 		Render2DMeshWScale(meshList[GEO_APPLES], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, shoot->GetPosition().x, shoot->GetPosition().y, false);
+
+
+	if (castlenguards->GetArcher().guardState != Guards::IDLING)
+	Render2DMeshWScale(castlenguards->GetArcher().guardMesh->GetNewMesh(), false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, castlenguards->GetArcher().position.x, castlenguards->GetArcher().position.y, false);
 
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
 	{
@@ -495,7 +497,7 @@ void Scene1::RenderFSMText()
 	ss.str("");
 	ss.precision(5);
 	ss << "FPS: " << fps;
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 0), 30, 0, 0);
+	//RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 1, 0), 30, 0, 0);
 
 	switch (castlenguards->GetState())
 	{
@@ -674,8 +676,8 @@ void Scene1::RenderFSMText()
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.5, 0, 0.2), 20, 500, 570);
 
 	ss.str("");
-	ss << "From:" << castlenguards->GetMessageBoard()->GetFromLabel() << "  To:" << castlenguards->GetMessageBoard()->GetToLabel() << "  Msg:" << castlenguards->GetMessageBoard()->GetMsg();
-	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.7, 0.2, 0), 20, 0, 50);
+	ss << "From : " << castlenguards->GetMessageBoard()->GetFromLabel() << "  To : " << castlenguards->GetMessageBoard()->GetToLabel() << "  M sg : " << castlenguards->GetMessageBoard()->GetMsg();
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.7, 0.1, 0.9), 20, 0, 50);
 }
 
 

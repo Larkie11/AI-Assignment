@@ -2,7 +2,7 @@
 
 Bullet::Bullet()
 {
-	gravity.Set(0, -9.8, 0);
+	gravity.Set(0, -10.8, 0);
 }
 
 Bullet::~Bullet()
@@ -24,7 +24,7 @@ void Bullet::SetTarget(Vector3 pos)
 }
 void Bullet::Update(double dt)
 {
-	vel += gravity * dt;
+	//vel += gravity * dt;
 	pos.x += vel.x * dt;
 	pos.y += gravity.y *dt;
 }
