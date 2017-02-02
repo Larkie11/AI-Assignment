@@ -804,6 +804,10 @@ void Scene1::RenderFSMText()
 	ss.str("");
 	ss << "From : " << castlenguards->GetMessageBoard()->GetFromLabel() << "  To : " << castlenguards->GetMessageBoard()->GetToLabel() << "  M sg : " << castlenguards->GetMessageBoard()->GetMsg();
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.7, 0.1, 0.9), 20, 0, 50);
+
+	ss.str("");
+	ss << "From : " << mess->GetFromLabel() << "  To : " << mess->GetToLabel() << "  M sg : " << mess->GetMsg();
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.7, 0.1, 0.9), 20, 0, 10);
 }
 
 
