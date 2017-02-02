@@ -75,7 +75,8 @@ public:
 		GEO_KSMOVEL,
 		GEO_KSMOVER,
 		GEO_KSIDLE,
-
+		//GEO_KSRADIUS,
+		//GEO_KSDMG,
 
 		NUM_GEOMETRY,
 	};

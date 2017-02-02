@@ -39,7 +39,10 @@ public:
 	void SpawnAppleFSMUpdate(double dt);
 	void HealPointFSMUpdate(double dt);
 	void KingSlimeFSMUpdate(double dt);
+	bool Detect(Vector3 pos1, Vector3 pos2, float radius);
+	bool HPDetect(Vector3 pos1, Vector3 pos2, float radius);
 	void RenderCircle(float x, float y, float radius, float r, float g, float b);
+	MessageBoard* GetMessageBoard();
 	enum HealPoint
 	{
 		IDLE,
@@ -51,11 +54,12 @@ public:
 	{
 		LAZE,
 		MOVE,
-		CHASE,
+		ATTACK,
 		RUN,
 		EAT,
 	};
 
+	MessageBoard *mess;
 private:
 	bool playCastleAnim = false;
 	CMap* m_cMap;	// Handle to the tilemaps
@@ -78,6 +82,9 @@ private:
 	//Heal Point
 	int PP;
 	int PPcounter;
+	bool HPdetect;
+	const float HPRadius = 60.f;
+	float hpradiussize = HPRadius;
 	HealPoint healpointState;
 	Vertex healpointPos;
 
@@ -89,10 +96,16 @@ private:
 	int MoveCounter;
 	int RandomMoveX;
 	int RandomMoveY;
+	const float KSRadius = 60.f;
+	float radiussize = KSRadius;
+	bool detect;
+	int KSHP;
+	int KSHPcounter;
 	KingSlime KSstate;
 	Vector3 KSpos;
 	Vector3 vel;
 	float p_speed;
+	bool detected;
 };
 
 #endif

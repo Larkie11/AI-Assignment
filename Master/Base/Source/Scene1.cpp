@@ -50,6 +50,7 @@ void Scene1::Init()
 
 void Scene1::InitFSM()
 {
+	mess = new MessageBoard();
 	//Heal Point data
 	healpointState = IDLE;
 	PP = 3;
@@ -57,7 +58,7 @@ void Scene1::InitFSM()
 	healpointPos.pos.Set(450, 100, 1);
 
 	//KingSlime data
-	Hunger = 10;
+	Hunger = 30;
 	HungerCounter = 100;
 	MoveCounter = 100;
 	RandomInt2 = RandomInteger(1, 200);
@@ -66,6 +67,10 @@ void Scene1::InitFSM()
 	RandomMoveY = RandomInteger(-5, 5);
 	KSstate = LAZE;
 	KSpos.Set(500, 300, 1);
+	KSHP = 45;
+	KSHPcounter = 100;
+	detect = false;
+	detected = false;
 
 	apples->Init(40);
 	enemy->Init(Behavior::GOTOWP, Vector3(100, 100, 1), Vector3(100, 200, 1), 30);
@@ -154,6 +159,11 @@ void Scene1::CastleFSMUpdate(double dt)
 
 void Scene1::HealPointFSMUpdate(double dt)
 {
+	Vector3 pos;
+	pos.x = healpointPos.pos.x;
+	pos.y = healpointPos.pos.y;
+	bool KSdetected = Detect(pos, KSpos, HPRadius);
+
 	SpriteAnimation *HealIDLE = dynamic_cast<SpriteAnimation*>(meshList[GEO_HEAL_IDLE]);
 	if (HealIDLE)
 	{
@@ -177,8 +187,13 @@ void Scene1::HealPointFSMUpdate(double dt)
 	//HealPoint FSM
 	if (healpointState == IDLE)
 	{
-		if (TempRandomInt2 <= 20)
+		if (KSdetected)
+		{
+			mess->SetFromLabel("HealPoint");
+			mess->SetToLabel("KingSlime");
+			mess->SetMessage("HEALING");
 			healpointState = HEAL;
+		}
 		else
 			healpointState = IDLE;
 	}
@@ -208,6 +223,9 @@ void Scene1::HealPointFSMUpdate(double dt)
 
 void Scene1::KingSlimeFSMUpdate(double dt)
 {
+
+	bool enemyDetected = Detect(KSpos, castlenguards->GetGuardList()[0].position, KSRadius);
+
 	//King Slime FSM
 	SpriteAnimation *KSidle = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSIDLE]);
 	if (KSidle)
@@ -236,7 +254,7 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 	}
 
 	MoveCounter -= dt * 0.001;
-	if (KSstate != EAT && MoveCounter <= 0)
+	if ((KSstate != EAT || KSstate != ATTACK) && MoveCounter <= 0)
 	{
 		MoveCounter = 300;
 		Hunger--;
@@ -244,60 +262,164 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 			KSstate = EAT;
 		RandomMoveX = RandomInteger(-50, 50);
 		RandomMoveY = RandomInteger(-50, 50);
+		if (enemyDetected)
+		{
+			KSstate = ATTACK;
+			if (KSHP <= 40)
+			{
+				KSstate = RUN;
+			}
+		}
 	}
 
-	if (KSstate != EAT && TempRandomInt2 % 2 == 0)
+	if ((KSstate != EAT || KSstate != ATTACK) && TempRandomInt2 % 2 == 0)
+	{
 		KSstate = LAZE;
+		if (enemyDetected)
+		{
+			KSstate = ATTACK;
+			if (KSHP <= 40)
+			{
+				KSstate = RUN;
+			}
+		}
+	}
 	else if (Hunger == 0)
+	{
 		KSstate = EAT;
+		if (enemyDetected)
+		{
+			KSstate = ATTACK;
+			if (KSHP <= 40)
+			{
+				KSstate = RUN;
+			}
+		}
+	}
 	else
 	{
 		KSstate = MOVE;
 	}
-
-	if (KSstate == MOVE)
+	if (KSstate == ATTACK)
 	{
-		if (KSpos.x >= 0 && KSpos.x <= 700)
+		KSHPcounter -= 1 * dt;
+		if (KSHPcounter <= 0)
 		{
-			KSpos.x += RandomMoveX * dt;
-		}
-		if (KSpos.y >= 0 && KSpos.y <= 300)
-		{
-			KSpos.y += RandomMoveY * dt;
-		}
-	}
-	else if (KSstate == EAT)
-	{
-		Vector3 d;
-
-		for (int i = 0; i < apples->GetAppleVec().size(); i++)
-		{
-			if (apples->GetAppleVec()[0].spawned)
+			KSHP--;
+			KSHPcounter = 100;
+			if (KSHP <= 40)
 			{
-				d.x = apples->GetAppleVec()[0].position.x - KSpos.x;
-				d.y = apples->GetAppleVec()[0].position.y - KSpos.y;
-				if (KSpos.x != apples->GetAppleVec()[0].position.x)
-				{
-
-					KSpos.x += d.x * dt * 0.2f;
-					KSpos.y += d.y * dt * 0.2f;
-					if (KSpos.x >= apples->GetAppleVec()[0].position.x - 1 && KSpos.x <= apples->GetAppleVec()[0].position.x + 1)
-					{
-						apples->GetAppleVec()[0].spawned = false;
-						apples->SetAppleDespawn(0, 0);
-						Hunger = 100;
-						KSstate = LAZE;
-					}
-				}
-			}
-			else
-				KSstate = LAZE;
-			if (d.IsZero())
-			{
-				return;
+				KSstate = RUN;
 			}
 		}
 	}
+
+	switch (KSstate)
+	{
+	case KingSlime::MOVE:
+	{
+							if (KSpos.x >= 0 && KSpos.x <= 700)
+							{
+								KSpos.x += RandomMoveX * dt;
+							}
+							if (KSpos.y >= 0 && KSpos.y <= 300)
+							{
+								KSpos.y += RandomMoveY * dt;
+							}
+
+							if (enemyDetected)
+							{
+								KSstate = ATTACK;
+							}
+	}
+		break;
+	case KingSlime::ATTACK:
+	{
+							mess->SetFromLabel("KingSlime");
+							mess->SetToLabel("Guards");
+							mess->SetMessage("EARTHQUAKE!");
+							bool detected = true;
+
+	}
+		break;
+	case KingSlime::RUN:
+	{
+						   if (healpointState != HEAL)
+						   {
+							   mess->SetFromLabel("KingSlime");
+							   mess->SetToLabel("HealPoint");
+							   mess->SetMessage("HEAL ME!!");
+						   }
+						   Vector3 d;
+						   d.x = healpointPos.pos.x - KSpos.x;
+						   d.y = healpointPos.pos.y - KSpos.y;
+						   if (KSpos.x != healpointPos.pos.x)
+						   {
+							   KSpos.x += d.x * dt * 0.5f;
+							   KSpos.y += d.y * dt * 0.5f;
+							   if (KSpos.x >= healpointPos.pos.x - 1 && KSpos.x <= healpointPos.pos.x + 1)
+							   {
+								   KSstate = LAZE;
+							   }
+						   }
+						   if (d.IsZero())
+						   {
+							   return;
+						   }
+	}
+		break;
+	case KingSlime::EAT:
+	{
+						   Vector3 d;
+
+						   for (int i = 0; i < apples->GetAppleVec().size(); i++)
+						   {
+							   if (apples->GetAppleVec()[1].spawned)
+							   {
+								   d.x = apples->GetAppleVec()[1].position.x - KSpos.x;
+								   d.y = apples->GetAppleVec()[1].position.y - KSpos.y;
+								   if (KSpos.x != apples->GetAppleVec()[1].position.x)
+								   {
+
+									   KSpos.x += d.x * dt * 0.2f;
+									   KSpos.y += d.y * dt * 0.2f;
+									   if (KSpos.x >= apples->GetAppleVec()[1].position.x - 1 && KSpos.x <= apples->GetAppleVec()[1].position.x + 1)
+									   {
+										   apples->GetAppleVec()[i].spawned = false;
+										   apples->SetAppleDespawn(0, 1);
+										   Hunger = 100;
+										   KSstate = LAZE;
+									   }
+								   }
+							   }
+							   else
+								   KSstate = LAZE;
+							   if (d.IsZero())
+							   {
+								   return;
+							   }
+						   }
+	}
+		break;
+	}
+}
+
+float GetDistance(float x1, float y1, float x2, float y2) { return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)); } // OK
+
+bool Scene1::Detect(Vector3 pos1, Vector3 pos2, float radius)
+{
+	bool detect = false;
+	float distance = GetDistance(pos1.x, pos1.y, pos2.x, pos2.y);
+	if (distance <= radius) detect = true;
+	return detect;
+}
+
+bool Scene1::HPDetect(Vector3 pos1, Vector3 pos2, float radius)
+{
+	bool detect = false;
+	float distance = GetDistance(pos1.x, pos1.y, pos2.x, pos2.y);
+	if (distance <= radius) detect = true;
+	return detect;
 }
 
 void Scene1::Update(double dt)
@@ -477,17 +599,21 @@ void Scene1::RenderFSM()
 
 	//Render Kingslime
 	if (KSstate == IDLE)
-		Render2DMeshWScale(meshList[GEO_KSIDLE], false, 80, 50, KSpos.x, KSpos.y, false);
-	else if (KSstate == MOVE || KSstate == EAT)
+		Render2DMeshWScale(meshList[GEO_KSIDLE], false, 80, 50, KSpos.x - 30, KSpos.y - 20, false);
+	else if (KSstate == MOVE || KSstate == EAT || KSstate == ATTACK || KSstate == RUN)
 	{
 		if (RandomMoveX < 0)
-			Render2DMeshWScale(meshList[GEO_KSMOVEL], false, 100, 80, KSpos.x, KSpos.y, false);
+			Render2DMeshWScale(meshList[GEO_KSMOVEL], false, 100, 80, KSpos.x - 30, KSpos.y - 20, false);
 		else
-			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.x, KSpos.y, false);
+			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.x - 30, KSpos.y - 20, false);
 	}
-
+	//Render2DMeshWScale(meshList[GEO_KSRADIUS], false, KSRadius, KSRadius, KSpos.x, KSpos.y, false);
 	Render2DMeshWScale(meshList[GEO_VILLAGER], false, 20, 20, enemy->GetPosition().x, enemy->GetPosition().y, false);
 
+	/*if (detected)
+	{
+		Render2DMeshWScale(meshList[GEO_KSDMG], false, 200, 200, castlenguards->GetGuardList()[0].position.x, castlenguards->GetGuardList()[0].position.y, false);
+	}*/
 }
 
 void Scene1::RenderFSMText()
@@ -549,7 +675,7 @@ void Scene1::RenderFSMText()
 	//RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, enemy->GetPosition().x, enemy->GetPosition().y - 20);
 
 	ss.str("");
-	ss << "KS Hunger: " << Hunger;
+	ss << "KS HP: " << KSHP;
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 10);
 	for (int i = 0; i < castlenguards->GetGuardList().size(); i++)
 	{
@@ -619,9 +745,9 @@ void Scene1::RenderFSMText()
 		ss << "KS State:MOVING";
 		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 30);
 		break;
-	case Scene1::CHASE:
+	case Scene1::ATTACK:
 		ss.str("");
-		ss << "KS State:CHASING";
+		ss << "KS State:ATTACKING";
 		RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0, 0, 0), 20, KSpos.x, KSpos.y - 30);
 		break;
 	case Scene1::RUN:
