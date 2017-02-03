@@ -88,6 +88,8 @@ private:
 	HealPoint healpointState;
 	Vertex healpointPos;
 
+
+	float ShootingBullet = 5.f;
 	//Kingslime
 	int Hunger;
 	int HungerCounter;

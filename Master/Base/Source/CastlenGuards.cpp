@@ -57,6 +57,7 @@ void CastlenGuards::InitCastlenGuards(int probabilitytoopen)
 
 	archer.position.Set(170, 350, 1);
 	archer.archerwp.push_back(Vector3(170, 350, 1));
+	archer.archerwp.push_back(Vector3(180, 350, 1));
 	archer.archerwp.push_back(Vector3(230, 350, 1));
 	archer.wayPointID = 1;
 	archer.guardMesh = new ChangeMesh();
@@ -125,7 +126,7 @@ void CastlenGuards::MinusHealth(int i, int whichguard)
 	if (guardList[whichguard].health > 0)
 	guardList[whichguard].health -= i;
 }
-void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
+void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition, int& KSHP)
 {
 	if (castleState != DEFENCE)
 	{
@@ -154,8 +155,62 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 				}
 			}
 		}
+	}
+	if (KSHP <= 0)
+	{
+		mb->SetFromLabel("Guard");
+		mb->SetToLabel("Archer");
+		std::ostringstream oss;
+		oss << "Archer, thanks for your help";
+		mb->SetMessage(oss.str());
+		archer.stopAnimation = false;
+		archerout = false;
+	}
+	if (mb->GetMsg() == ("Archer, thanks for your help"))
+	{
+		archer.guardState = Guards::MOVINGIN;
 
+		if (archer.wayPointID > 0)
+		{
+			archer.changePos = true;
+			archer.position = archer.archerwp[2];
+			archer.wayPointID = 0;
+		}
+	
+		archer.nextPoint = archer.archerwp[archer.wayPointID];
 
+		Vector3 direction2;
+		if (archer.nextPoint != archer.position)
+		{
+			direction2 = (archer.nextPoint - archer.position).Normalize();
+		}
+		else
+		{
+			archer.changePos = false;
+		}
+		float distance2 = (archer.nextPoint - archer.position).LengthSquared();
+
+		if (distance2 < 0.1)
+		{
+			archer.position = archer.nextPoint;
+		}
+		else
+			archer.position = archer.position + direction2* 0.7;
+
+		if (distance2 < 0.1 && archer.wayPointID > 0)
+		{
+			archer.wayPointID--;
+			archer.arrived = false;
+		}
+		if (distance2 <= 0)
+		{
+			archer.wayPointID = 0;
+			mb->SetMessage("");
+			archer.guardState = Guards::IDLING;
+			archer.stopAnimation = true;
+			mb->SetFromLabel("");
+			mb->SetToLabel("");
+		}
 	}
 	else if (castleState == DEFENCE && addedCount)
 	{
@@ -264,7 +319,6 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 			}
 			else
 			{
-				//guardList[i].stopAnimation = true;
 				guardList[i].changePos = false;
 			}
 
@@ -298,11 +352,10 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 		{
 			archerout = true;
 		}
+
 		if (archerout)
 		{
 			archer.guardState = Guards::MOVINGOUT;
-
-			
 
 			if (archer.changePos && archer.wayPointID < archer.archerwp.size() - 1)
 			{
@@ -399,7 +452,7 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 			}
 			if (guardList[i].guardState == Guards::ATTACKING)
 			{
-				if (archer.guardState != Guards::ATTACKING)
+				if (archer.guardState != Guards::ATTACKING && KSHP > 0)
 				{
 					mb->SetFromLabel("Guards");
 					mb->SetToLabel("Archer");
@@ -409,19 +462,47 @@ void CastlenGuards::UpdateCastlenGuards(double dt, Vector3 enemyPosition)
 				if (guardList[i].wayPointID == 1)
 					guardList[i].wayPointID = 2;
 
-				distance = (enemyPosition - guardList[i].position).LengthSquared();
+				distance = (enemyPosition - guardList[0].position).LengthSquared();
+				Vector3 enemyPositionOffset = Vector3(enemyPosition.x, enemyPosition.y + 0.3, enemyPosition.z);
+				float distance2 = (enemyPositionOffset - guardList[1].position).LengthSquared();
 				{
-					if (guardList[i].position.x <= enemyPosition.x)
-						guardList[i].guardState = Guards::MOVINGR;
+					if (guardList[0].position.x <= enemyPosition.x)
+						guardList[0].guardState = Guards::MOVINGR;
 					else
-						guardList[i].guardState = Guards::MOVINGL;
+						guardList[0].guardState = Guards::MOVINGL;
 
-					direction = (enemyPosition - guardList[i].position).Normalize();
+					if (guardList[1].position.x <= enemyPositionOffset.x)
+						guardList[1].guardState = Guards::MOVINGR;
+					else
+						guardList[1].guardState = Guards::MOVINGL;
+
+					
+					direction = (enemyPosition - guardList[0].position).Normalize();
+					Vector3 direction2 = (enemyPositionOffset - guardList[1].position).Normalize();
+
 					if (distance > 400)
-						guardList[i].position = (guardList[i].position + direction* Math::RandFloatMinMax(0.7, 1.5));
+						guardList[0].position = (guardList[0].position + direction* Math::RandFloatMinMax(0.7, 1.5));
 
 					if (distance < 500)
-						guardList[i].guardState = Guards::ATTACKING;
+						guardList[0].guardState = Guards::ATTACKING;
+
+					if (distance2 > 400)
+						guardList[1].position = (guardList[1].position + direction2* Math::RandFloatMinMax(1, 1.5));
+
+					if (distance2 < 500)
+						guardList[1].guardState = Guards::ATTACKING;
+
+					if (guardList[i].guardState == Guards::ATTACKING && KSHP > 0)
+					{
+						attackCounter -= dt;
+						attacking = true;
+					}
+					if (attacking && attackCounter <= 0.f)
+					{
+						KSHP -= 1;
+						attacking = false;
+						attackCounter = 3.f;
+					}
 				}
 				guardList[i].stopAnimation = false;
 			}

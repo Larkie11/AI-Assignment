@@ -121,6 +121,12 @@ void Scene1::CastleFSMUpdate(double dt)
 		archerR->Update(dt);
 		archerR->m_anim->animActive = true;
 	}
+	SpriteAnimation *archerL = dynamic_cast<SpriteAnimation*>(meshList[GEO_ARCHERL]);
+	if (archerL && !castlenguards->GetArcher().stopAnimation)
+	{
+		archerL->Update(dt);
+		archerL->m_anim->animActive = true;
+	}
 	SpriteAnimation *guards = dynamic_cast<SpriteAnimation*>(castlenguards->GetGuardList()[0].guardMesh->GetNewMesh());
 	if (guards && !castlenguards->GetGuardList()[0].stopAnimation)
 	{
@@ -133,11 +139,11 @@ void Scene1::CastleFSMUpdate(double dt)
 		guards2->Update(dt);
 		guards2->m_anim->animActive = true;
 	}
-	castlenguards->UpdateCastlenGuards(dt,KSpos);
+	castlenguards->UpdateCastlenGuards(dt,KSpos,KSHP);
 
 	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
 	{
-		if (!shot)
+		if (!shot && KSHP > 0)
 		{
 			if (castlenguards->GetArcher().position.x < KSpos.x)
 			{
@@ -446,9 +452,25 @@ void Scene1::Update(double dt)
 	}		
 	
 	//cout << shoot->vel << " " << shoot->pos << " " << shoot->gravity << endl;
-
-	if (shoot->GetPosition().y < KSpos.y)
+	float ksDist = (KSpos - shoot->GetPosition()).LengthSquared();
+	//cout << ksDist << endl;
+	if (shoot->GetPosition().x > Application::GetInstance().GetScreenWidth() || shoot->GetPosition().x < 0 || shoot->GetPosition().y < 0 || shoot->GetPosition().y > Application::GetInstance().GetScreenHeight())
 	{
+		shot = false;
+	}
+	if (shot && ShootingBullet > 0.f)
+	{
+		ShootingBullet -= dt;
+	}
+	if (shot && ShootingBullet <= 0.f)
+	{
+		ShootingBullet = 5.f;
+		shot = false;
+	}
+	if (ksDist < 1000)
+	{
+		if (KSHP > 0)
+			KSHP -= 45;
 		shot = false;
 	}
 	fps = (float)(1.f / dt);
@@ -492,11 +514,11 @@ void Scene1::UpdateFSM(double dt)
 	}
 
 	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
-	if (distance < 1000000 && castlenguards->GetState() == Castle::OPEN)
+	if (distance < 1000000 && castlenguards->GetState() == Castle::OPEN && KSHP > 0)
 	{
 		castlenguards->SetState(Castle::DEFENCE);
 	}
-	else if (distance > 1000000 && castlenguards->GetState() == Castle::DEFENCE)
+	else if (castlenguards->GetState() == Castle::DEFENCE && KSHP <= 0)
 	{
 		castlenguards->SetState(Castle::OPEN);
 	}
@@ -541,7 +563,10 @@ void Scene1::RenderFSM()
 	switch (castlenguards->GetArcher().guardState)
 	{
 	case Guards::IDLING:
-		castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_GUARDS]);
+		castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_ARCHERR]);
+		break;
+	case Guards::MOVINGIN:
+		castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_ARCHERL]);
 		break;
 	case Guards::MOVINGOUT:
 		castlenguards->GetArcher().guardMesh->SetNewMesh(meshList[GEO_ARCHERR]);
@@ -557,8 +582,8 @@ void Scene1::RenderFSM()
 	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
 		Render2DMeshWScale(meshList[GEO_APPLES], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, shoot->GetPosition().x, shoot->GetPosition().y, false);
 
-
 	if (castlenguards->GetArcher().guardState != Guards::IDLING)
+
 	Render2DMeshWScale(castlenguards->GetArcher().guardMesh->GetNewMesh(), false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, castlenguards->GetArcher().position.x, castlenguards->GetArcher().position.y, false);
 
 	for (int i = 0; i < apples->GetAppleVec().size(); i++)
@@ -648,6 +673,29 @@ void Scene1::RenderFSMText()
 	ss.str("");
 	ss << "Open: " << castlenguards->GetOpenCounter() << " Close: " << castlenguards->GetCloseCounter() << " Defence: " << castlenguards->GetDefenceCounter();
 	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(0.7, 0.2, 0), 20, 0, 530);
+
+	ss.str("");
+	switch (castlenguards->GetArcher().guardState)
+	{
+	case Guards::IDLING:
+		ss.str("");
+		ss << "IDLING";
+		break;
+	case Guards::MOVINGIN:
+		ss.str("");
+		ss << "MOVING IN";
+		break;
+	case Guards::MOVINGOUT:
+		ss.str("");
+		ss << "MOVING OUT";
+		break;
+	case Guards::ATTACKING:
+		ss.str("");
+		ss << "ATTACKING";
+		break;
+	}
+	RenderTextOnScreen(meshList[GEO_TEXT], ss.str(), Color(1, 0, 0), 20, castlenguards->GetArcher().position.x - 12, castlenguards->GetArcher().position.y - 16);
+
 
 	/*ss.str("");
 	ss << "Previous random state number " << castlenguards->GetTempInt();

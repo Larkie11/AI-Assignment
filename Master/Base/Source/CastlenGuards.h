@@ -58,7 +58,7 @@ public:
 	void SetHealth(int i, int whichguard);
 	void MinusHealth(int i, int whichguard);
 	void InitCastlenGuards(int probabilitytoopen);
-	void UpdateCastlenGuards(double dt, Vector3 enemyPosition);
+	void UpdateCastlenGuards(double dt, Vector3 enemyPosition, int & KSHP);
 	int GetOpenCounter();
 	int GetCloseCounter();
 	Guards GetArcher();
@@ -68,8 +68,11 @@ public:
 	int GetTempInt();
 	int GetDefenceCounter();
 	float GetTimer();
+	int GuardAttack();
 private:
 	Vector3 position1;
+	float attackCounter = 3.f;
+	bool attacking = false;
 	vector<Guards> guardList;
 	bool arrived = false;
 	float timer;
@@ -89,4 +92,5 @@ private:
 	int defence;
 	bool addedCount;
 	MessageBoard* mb;
+	int ksHealth;
 };
