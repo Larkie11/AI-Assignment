@@ -222,6 +222,8 @@ void SceneBase::Init()
 	meshList[GEO_HEAL_REST]->textureID = LoadTGA("Image//EmptyFountain.tga");
 	meshList[GEO_HEAL_HEAL] = MeshBuilder::GenerateSpriteAnimation("Healing Fountain", 1, 4);
 	meshList[GEO_HEAL_HEAL]->textureID = LoadTGA("Image//Fountain.tga");
+	meshList[GEO_HEAL_EFFECT] = MeshBuilder::GenerateSpriteAnimation("Healing Effect", 1, 9);
+	meshList[GEO_HEAL_EFFECT]->textureID = LoadTGA("Image//HealEffect.tga");
 
 	meshList[GEO_KSIDLE] = MeshBuilder::GenerateSpriteAnimation("Idle Slime", 1, 2);
 	meshList[GEO_KSIDLE]->textureID = LoadTGA("Image//KingSlimeIdle.tga");
@@ -229,6 +231,10 @@ void SceneBase::Init()
 	meshList[GEO_KSMOVEL]->textureID = LoadTGA("Image//KingSlimeMove.tga");
 	meshList[GEO_KSMOVER] = MeshBuilder::GenerateSpriteAnimation("Move Slime", 1, 7);
 	meshList[GEO_KSMOVER]->textureID = LoadTGA("Image//KingSlimeMoveR.tga");
+	meshList[GEO_KSATTACKFORCE] = MeshBuilder::GenerateSpriteAnimation("KingSlimeAttack", 2, 5);
+	meshList[GEO_KSATTACKFORCE]->textureID = LoadTGA("Image//KSAttack.tga");
+	meshList[GEO_KSATTACK] = MeshBuilder::GenerateSpriteAnimation("Move Slime", 1, 7);
+	meshList[GEO_KSATTACK]->textureID = LoadTGA("Image//KingSlimeMove.tga");
 
 	SpriteAnimation *ksIDLE = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSIDLE]);
 	if (ksIDLE)
@@ -261,6 +267,28 @@ void SceneBase::Init()
 		HealHEAL->m_anim = new Animation();
 		HealHEAL->m_anim->Set(0, 3, 1, 1, true);
 	}
+	SpriteAnimation *HealEFFECT = dynamic_cast<SpriteAnimation*>(meshList[GEO_HEAL_EFFECT]);
+	if (HealEFFECT)
+	{
+		HealEFFECT->m_anim = new Animation();
+		HealEFFECT->m_anim->Set(0, 8, 1, 1, true);
+	}
+	SpriteAnimation *ksATTACK = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSATTACK]);
+	if (ksATTACK)
+	{
+		ksATTACK->m_anim = new Animation();
+		ksATTACK->m_anim->Set(0, 6, 1, 1, true);
+	}
+	SpriteAnimation *KSAttackDust = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSATTACKFORCE]);
+	if (KSAttackDust)
+	{
+		//if (ksATTACK->m_currentFrame == 2)
+		//{
+			KSAttackDust->m_anim = new Animation();
+			KSAttackDust->m_anim->Set(0, 9, 1, 1, true);
+		//}
+	}
+
 
 	Math::InitRNG();
 	camera.Init(Vector3(0, 0, 10), Vector3(0, 0, 0), Vector3(0, 1, 0));

@@ -52,7 +52,7 @@ void Scene1::InitFSM()
 {
 	mess = new MessageBoard();
 	//Heal Point data
-	healpointState = IDLE;
+	healpointState = REST;
 	PP = 3;
 	PPcounter = 100;
 	healpointPos.pos.Set(450, 100, 1);
@@ -65,12 +65,16 @@ void Scene1::InitFSM()
 	TempRandomInt2 = RandomInt2;
 	RandomMoveX = RandomInteger(-5, 5);
 	RandomMoveY = RandomInteger(-5, 5);
+	TempRandomIntX = RandomMoveX;
+	TempRandomIntY = RandomMoveY;
 	KSstate = LAZE;
 	KSpos.Set(500, 300, 1);
 	KSHP = 45;
 	KSHPcounter = 100;
 	detect = false;
 	detected = false;
+	isattacked = false;
+	ishurted = false;
 
 	apples->Init(40);
 	enemy->Init(Behavior::GOTOWP, Vector3(100, 100, 1), Vector3(100, 200, 1), 30);
@@ -145,19 +149,17 @@ void Scene1::CastleFSMUpdate(double dt)
 	{
 		if (!shot && KSHP > 0)
 		{
-			ShootingBullet = 5.f;
-
 			if (castlenguards->GetArcher().position.x < KSpos.x)
 			{
-				float distancetoenemy2 = (KSpos - castlenguards->GetArcher().position ).LengthSquared();
+				float distancetoenemy2 = (castlenguards->GetArcher().position - KSpos).LengthSquared();
 				//cout << "dist" << distancetoenemy2 << endl;
-				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2);
+				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2 / 800);
 			}
 			else
 			{
 				float distancetoenemy2 = (KSpos - castlenguards->GetArcher().position).LengthSquared();
 				//cout << "dist" << distancetoenemy2 << endl;
-				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 1000));
+				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 800));
 			}
 			shot = true;
 		}
@@ -183,6 +185,12 @@ void Scene1::HealPointFSMUpdate(double dt)
 	{
 		HealHEAL->Update(dt);
 		HealHEAL->m_anim->animActive = true;
+	}
+	SpriteAnimation *HealEFFECT = dynamic_cast<SpriteAnimation*>(meshList[GEO_HEAL_EFFECT]);
+	if (HealEFFECT)
+	{
+		HealEFFECT->Update(dt);
+		HealEFFECT->m_anim->animActive = true;
 	}
 
 	RandomInt2 -= dt* 0.001;
@@ -211,6 +219,7 @@ void Scene1::HealPointFSMUpdate(double dt)
 		if (PPcounter == 0)
 		{
 			PP -= 1;
+			KSHP += 1;
 			PPcounter = 100;
 			if (PP <= 0)
 				healpointState = REST;
@@ -219,20 +228,24 @@ void Scene1::HealPointFSMUpdate(double dt)
 	else if (healpointState == REST)
 	{
 		PPcounter-- * dt;
-		if (PPcounter == 10)
+		if (PPcounter == 0)
 		{
 			PP += 1;
 			PPcounter = 100;
 			if (PP >= 10)
 				healpointState = IDLE;
+			else if (KSdetected)
+				healpointState = HEAL;
 		}
 	}
 }
 
 void Scene1::KingSlimeFSMUpdate(double dt)
 {
+	bool enemyDetected1 = Detect(KSpos, castlenguards->GetGuardList()[1].position, KSRadius);
+	bool enemyDetected0 = Detect(KSpos, castlenguards->GetGuardList()[0].position, KSRadius);
 
-	bool enemyDetected = Detect(KSpos, castlenguards->GetGuardList()[0].position, KSRadius);
+	bool hpDetected = HPDetect(KSpos, healpointPos.pos.x, KSRadius);
 
 	//King Slime FSM
 	SpriteAnimation *KSidle = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSIDLE]);
@@ -253,100 +266,118 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 		KSmoveR->Update(dt);
 		KSmoveR->m_anim->animActive = true;
 	}
-
-	RandomInt2 -= dt* 0.001;
-	if (RandomInt2 <= 0)
+	SpriteAnimation *KSATTACK = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSATTACK]);
+	if (KSATTACK)
 	{
-		RandomInt2 = RandomInteger(1, 200);
-		TempRandomInt2 = RandomInt2;
+		KSATTACK->Update(dt);
+		KSATTACK->m_anim->animActive = true;
 	}
-
-	MoveCounter -= dt * 0.001;
-	if ((KSstate != EAT || KSstate != ATTACK) && MoveCounter <= 0)
+	SpriteAnimation *KSattack = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSATTACKFORCE]);
+	if (KSattack)
 	{
-		MoveCounter = 300;
-		Hunger--;
-		if (Hunger == 0)
-			KSstate = EAT;
-		RandomMoveX = RandomInteger(-50, 50);
-		RandomMoveY = RandomInteger(-50, 50);
-		if (enemyDetected)
-		{
-			KSstate = ATTACK;
-			if (KSHP <= 40)
-			{
-				KSstate = RUN;
-			}
-		}
-	}
-
-	if ((KSstate != EAT || KSstate != ATTACK) && TempRandomInt2 % 2 == 0)
-	{
-		KSstate = LAZE;
-		if (enemyDetected)
-		{
-			KSstate = ATTACK;
-			if (KSHP <= 40)
-			{
-				KSstate = RUN;
-			}
-		}
-	}
-	else if (Hunger == 0)
-	{
-		KSstate = EAT;
-		if (enemyDetected)
-		{
-			KSstate = ATTACK;
-			if (KSHP <= 40)
-			{
-				KSstate = RUN;
-			}
-		}
-	}
-	else
-	{
-		KSstate = MOVE;
-	}
-	if (KSstate == ATTACK)
-	{
-		KSHPcounter -= 1 * dt;
-		if (KSHPcounter <= 0)
-		{
-			KSHP--;
-			KSHPcounter = 100;
-			if (KSHP <= 40)
-			{
-				KSstate = RUN;
-			}
-		}
+		KSattack->Update(dt);
+		KSattack->m_anim->animActive = true;
 	}
 
 	switch (KSstate)
 	{
-	case KingSlime::MOVE:
+	case KingSlime::LAZE:
 	{
-							if (KSpos.x >= 0 && KSpos.x <= 700)
-							{
-								KSpos.x += RandomMoveX * dt;
-							}
-							if (KSpos.y >= 0 && KSpos.y <= 300)
-							{
-								KSpos.y += RandomMoveY * dt;
-							}
 
-							if (enemyDetected)
+							RandomInt2 -= dt* 0.001;
+							if (RandomInt2 <= 0)
+							{
+								RandomInt2 = RandomInteger(1, 200);
+								TempRandomInt2 = RandomInt2;
+							}
+							if (TempRandomInt2 % 2 != 0)
+							{
+								RandomMoveX = RandomInteger(-5, 5);
+								RandomMoveY = RandomInteger(-5, 5);
+								KSstate = MOVE;
+							}
+							else if (enemyDetected0 || enemyDetected1 && ishurted == false)
 							{
 								KSstate = ATTACK;
 							}
+							else if (KSHP <= 30)
+							{
+								KSstate = RUN;
+							}
+							else if (Hunger == 0)
+							{
+								KSstate = EAT;
+							}
+							else
+							{
+								KSstate = LAZE;
+							}
+							
+	}
+		  break;
+	case KingSlime::MOVE:
+	{
+							if (TempRandomInt2 % 2 == 0)
+							{
+								KSstate = LAZE;
+							}
+							else
+							{
+								MoveCounter -= dt * 0.001;
+								if (KSpos.x >= 0 && KSpos.x <= 700)
+								{
+									KSpos.x += RandomMoveX * dt;
+									if (KSpos.x <= 0)
+										KSpos.x = 1;
+									else if (KSpos.x >= 700)
+										KSpos.x = 699;
+								}
+								if (KSpos.y >= 0 && KSpos.y <= 300)
+								{
+									KSpos.y += RandomMoveY * dt;
+									if (KSpos.y <= 0)
+										KSpos.y = 1;
+									else if (KSpos.y >= 300)
+										KSpos.y = 299;
+								}
+								if (MoveCounter <= 0)
+								{
+									Hunger--;
+									MoveCounter = 100;
+								}
+								if (enemyDetected0 || enemyDetected1 && ishurted == false)
+								{
+									KSstate = ATTACK;
+								}
+								else {
+									KSstate = MOVE;
+								}
+						}	
 	}
 		break;
 	case KingSlime::ATTACK:
 	{
+							  if (enemyDetected0)
+							  {
+								  castlenguards->MinusHealth(1, 0);
+							  }
+							  else if (enemyDetected1)
+							  {
+								  castlenguards->MinusHealth(1, 1);
+							  }
 							mess->SetFromLabel("KingSlime");
 							mess->SetToLabel("Guards");
 							mess->SetMessage("EARTHQUAKE!");
 							bool detected = true;
+							if (KSHP < 40 && ishurted == false && hpDetected == false)
+							{
+								ishurted = true;
+								KSstate = RUN;
+							}
+							if (!enemyDetected0 && !enemyDetected1)
+							{
+								KSstate = LAZE;
+							}
 
 	}
 		break;
@@ -367,7 +398,15 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 							   KSpos.y += d.y * dt * 0.5f;
 							   if (KSpos.x >= healpointPos.pos.x - 1 && KSpos.x <= healpointPos.pos.x + 1)
 							   {
-								   KSstate = LAZE;
+								   hpDetected = true;
+								   if (enemyDetected0 == true || enemyDetected1 == true)
+								   {
+									   KSstate = ATTACK;
+								   }
+								   else
+								   {
+									   KSstate = LAZE;
+								   }
 							   }
 						   }
 						   if (d.IsZero())
@@ -464,7 +503,6 @@ void Scene1::Update(double dt)
 	{
 		ShootingBullet -= dt;
 	}
-
 	if (shot && ShootingBullet <= 0.f)
 	{
 		ShootingBullet = 5.f;
@@ -473,7 +511,7 @@ void Scene1::Update(double dt)
 	if (ksDist < 1000)
 	{
 		if (KSHP > 0)
-			KSHP -= 5;
+			KSHP -= 1;
 		shot = false;
 	}
 	fps = (float)(1.f / dt);
@@ -517,7 +555,7 @@ void Scene1::UpdateFSM(double dt)
 	}
 
 	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
-	if (distance < 140000 && castlenguards->GetState() == Castle::OPEN && KSHP > 0)
+	if (distance < 1000000 && castlenguards->GetState() == Castle::OPEN && KSHP > 0)
 	{
 		castlenguards->SetState(Castle::DEFENCE);
 	}
@@ -583,7 +621,7 @@ void Scene1::RenderFSM()
 	
 
 	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
-		Render2DMeshWScale(meshList[GEO_FIREBALL], false, 15, 15, shoot->GetPosition().x, shoot->GetPosition().y, false);
+		Render2DMeshWScale(meshList[GEO_APPLES], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, shoot->GetPosition().x, shoot->GetPosition().y, false);
 
 	if (castlenguards->GetArcher().guardState != Guards::IDLING)
 
@@ -617,24 +655,32 @@ void Scene1::RenderFSM()
 		Render2DMeshWScale(meshList[GEO_TREE], false, 170, 170, apples->GetTreeVec()[i].pos.x, apples->GetTreeVec()[i].pos.y, false);
 	}
 
-	//Render HealPoint
-	if (healpointState == HEAL)
-		Render2DMeshWScale(meshList[GEO_HEAL_HEAL], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
-	else if (healpointState == REST)
-		Render2DMeshWScale(meshList[GEO_HEAL_REST], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
-	else
-		Render2DMeshWScale(meshList[GEO_HEAL_IDLE], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
-
 	//Render Kingslime
 	if (KSstate == IDLE)
 		Render2DMeshWScale(meshList[GEO_KSIDLE], false, 80, 50, KSpos.x - 30, KSpos.y - 20, false);
-	else if (KSstate == MOVE || KSstate == EAT || KSstate == ATTACK || KSstate == RUN)
+	else if (KSstate == MOVE || KSstate == EAT || KSstate == RUN)
 	{
 		if (RandomMoveX < 0)
 			Render2DMeshWScale(meshList[GEO_KSMOVEL], false, 100, 80, KSpos.x - 30, KSpos.y - 20, false);
 		else
 			Render2DMeshWScale(meshList[GEO_KSMOVER], false, 100, 80, KSpos.x - 30, KSpos.y - 20, false);
 	}
+	else if (KSstate == ATTACK)
+	{
+		Render2DMeshWScale(meshList[GEO_KSATTACK], false, 100, 80, KSpos.x - 30, KSpos.y - 20, false);
+		Render2DMeshWScale(meshList[GEO_KSATTACKFORCE], false, 100, 80, KSpos.x - 30, KSpos.y - 20, false);
+	}
+	//Render HealPoint
+	if (healpointState == HEAL)
+	{
+		Render2DMeshWScale(meshList[GEO_HEAL_HEAL], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
+		Render2DMeshWScale(meshList[GEO_HEAL_EFFECT], false, 100, 80, KSpos.x - 30, KSpos.y - 20, false);
+	}
+	else if (healpointState == REST)
+		Render2DMeshWScale(meshList[GEO_HEAL_REST], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
+	else
+		Render2DMeshWScale(meshList[GEO_HEAL_IDLE], false, 70, 70, healpointPos.pos.x, healpointPos.pos.y, false);
+
 	//Render2DMeshWScale(meshList[GEO_KSRADIUS], false, KSRadius, KSRadius, KSpos.x, KSpos.y, false);
 	Render2DMeshWScale(meshList[GEO_VILLAGER], false, 20, 20, enemy->GetPosition().x, enemy->GetPosition().y, false);
 

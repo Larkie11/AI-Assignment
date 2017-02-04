@@ -98,6 +98,8 @@ private:
 	int MoveCounter;
 	int RandomMoveX;
 	int RandomMoveY;
+	int TempRandomIntX;
+	int TempRandomIntY;
 	const float KSRadius = 60.f;
 	float radiussize = KSRadius;
 	bool detect;
@@ -108,6 +110,8 @@ private:
 	Vector3 vel;
 	float p_speed;
 	bool detected;
+	bool isattacked;
+	bool ishurted;
 };
 
 #endif
