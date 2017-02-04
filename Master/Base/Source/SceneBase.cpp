@@ -134,6 +134,8 @@ void SceneBase::Init()
 
 	meshList[GEO_TILESET1] = MeshBuilder::GenerateTileSet("GEO_TILESET3", 30, 30);
 	meshList[GEO_TILESET1]->textureID = LoadTGA("Image//tileSet3.tga");
+	meshList[GEO_FIREBALL] = MeshBuilder::Generate2DMesh("GEO_FIREBALL", Color(1, 1, 1), 100, 100, 1, 1);
+	meshList[GEO_FIREBALL]->textureID = LoadTGA("Image//Fireball.tga");
 	meshList[GEO_CASTLE] = MeshBuilder::GenerateSpriteAnimation("sprite", 1, 2);
 	meshList[GEO_CASTLE]->textureID = LoadTGA("Image//Castle.tga");
 	meshList[GEO_DOOR] = MeshBuilder::Generate2DMesh("sprite", Color(1, 1, 1), 100, 100, 1, 1);

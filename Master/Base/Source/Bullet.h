@@ -17,4 +17,5 @@ public:
 	
 private:
 	float positiontill;
+	Vector3 direction;
 };

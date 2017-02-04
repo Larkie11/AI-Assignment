@@ -145,17 +145,19 @@ void Scene1::CastleFSMUpdate(double dt)
 	{
 		if (!shot && KSHP > 0)
 		{
+			ShootingBullet = 5.f;
+
 			if (castlenguards->GetArcher().position.x < KSpos.x)
 			{
-				float distancetoenemy2 = (castlenguards->GetArcher().position - KSpos).LengthSquared();
+				float distancetoenemy2 = (KSpos - castlenguards->GetArcher().position ).LengthSquared();
 				//cout << "dist" << distancetoenemy2 << endl;
-				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2 / 800);
+				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2);
 			}
 			else
 			{
 				float distancetoenemy2 = (KSpos - castlenguards->GetArcher().position).LengthSquared();
 				//cout << "dist" << distancetoenemy2 << endl;
-				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 800));
+				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 1000));
 			}
 			shot = true;
 		}
@@ -462,6 +464,7 @@ void Scene1::Update(double dt)
 	{
 		ShootingBullet -= dt;
 	}
+
 	if (shot && ShootingBullet <= 0.f)
 	{
 		ShootingBullet = 5.f;
@@ -470,7 +473,7 @@ void Scene1::Update(double dt)
 	if (ksDist < 1000)
 	{
 		if (KSHP > 0)
-			KSHP -= 45;
+			KSHP -= 5;
 		shot = false;
 	}
 	fps = (float)(1.f / dt);
@@ -514,7 +517,7 @@ void Scene1::UpdateFSM(double dt)
 	}
 
 	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
-	if (distance < 1000000 && castlenguards->GetState() == Castle::OPEN && KSHP > 0)
+	if (distance < 140000 && castlenguards->GetState() == Castle::OPEN && KSHP > 0)
 	{
 		castlenguards->SetState(Castle::DEFENCE);
 	}
@@ -580,7 +583,7 @@ void Scene1::RenderFSM()
 	
 
 	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
-		Render2DMeshWScale(meshList[GEO_APPLES], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, shoot->GetPosition().x, shoot->GetPosition().y, false);
+		Render2DMeshWScale(meshList[GEO_FIREBALL], false, 15, 15, shoot->GetPosition().x, shoot->GetPosition().y, false);
 
 	if (castlenguards->GetArcher().guardState != Guards::IDLING)
 
