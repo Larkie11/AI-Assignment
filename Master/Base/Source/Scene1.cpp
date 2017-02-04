@@ -65,8 +65,6 @@ void Scene1::InitFSM()
 	TempRandomInt2 = RandomInt2;
 	RandomMoveX = RandomInteger(-5, 5);
 	RandomMoveY = RandomInteger(-5, 5);
-	TempRandomIntX = RandomMoveX;
-	TempRandomIntY = RandomMoveY;
 	KSstate = LAZE;
 	KSpos.Set(500, 300, 1);
 	KSHP = 45;
@@ -149,17 +147,19 @@ void Scene1::CastleFSMUpdate(double dt)
 	{
 		if (!shot && KSHP > 0)
 		{
+			ShootingBullet = 5.f;
+
 			if (castlenguards->GetArcher().position.x < KSpos.x)
 			{
-				float distancetoenemy2 = (castlenguards->GetArcher().position - KSpos).LengthSquared();
+				float distancetoenemy2 = (KSpos - castlenguards->GetArcher().position ).LengthSquared();
 				//cout << "dist" << distancetoenemy2 << endl;
-				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2 / 800);
+				shoot->SetPosition(castlenguards->GetArcher().position, distancetoenemy2);
 			}
 			else
 			{
 				float distancetoenemy2 = (KSpos - castlenguards->GetArcher().position).LengthSquared();
 				//cout << "dist" << distancetoenemy2 << endl;
-				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 800));
+				shoot->SetPosition(castlenguards->GetArcher().position, -(distancetoenemy2 / 1000));
 			}
 			shot = true;
 		}
@@ -242,9 +242,9 @@ void Scene1::HealPointFSMUpdate(double dt)
 
 void Scene1::KingSlimeFSMUpdate(double dt)
 {
+
 	bool enemyDetected1 = Detect(KSpos, castlenguards->GetGuardList()[1].position, KSRadius);
 	bool enemyDetected0 = Detect(KSpos, castlenguards->GetGuardList()[0].position, KSRadius);
-
 	bool hpDetected = HPDetect(KSpos, healpointPos.pos.x, KSRadius);
 
 	//King Slime FSM
@@ -277,6 +277,13 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 	{
 		KSattack->Update(dt);
 		KSattack->m_anim->animActive = true;
+	}
+
+	RandomInt2 -= dt* 0.001;
+	if (RandomInt2 <= 0)
+	{
+		RandomInt2 = RandomInteger(1, 200);
+		TempRandomInt2 = RandomInt2;
 	}
 
 	switch (KSstate)
@@ -312,9 +319,9 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 							{
 								KSstate = LAZE;
 							}
-							
+
 	}
-		  break;
+		break;
 	case KingSlime::MOVE:
 	{
 							if (TempRandomInt2 % 2 == 0)
@@ -352,7 +359,7 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 								else {
 									KSstate = MOVE;
 								}
-						}	
+							}
 	}
 		break;
 	case KingSlime::ATTACK:
@@ -365,19 +372,19 @@ void Scene1::KingSlimeFSMUpdate(double dt)
 							  {
 								  castlenguards->MinusHealth(1, 1);
 							  }
-							mess->SetFromLabel("KingSlime");
-							mess->SetToLabel("Guards");
-							mess->SetMessage("EARTHQUAKE!");
-							bool detected = true;
-							if (KSHP < 40 && ishurted == false && hpDetected == false)
-							{
-								ishurted = true;
-								KSstate = RUN;
-							}
-							if (!enemyDetected0 && !enemyDetected1)
-							{
-								KSstate = LAZE;
-							}
+							  mess->SetFromLabel("KingSlime");
+							  mess->SetToLabel("Guards");
+							  mess->SetMessage("EARTHQUAKE!");
+							  bool detected = true;
+							  if (KSHP < 40 && ishurted == false && hpDetected == false)
+							  {
+								  ishurted = true;
+								  KSstate = RUN;
+							  }
+							  if (!enemyDetected0 && !enemyDetected1)
+							  {
+								  KSstate = LAZE;
+							  }
 
 	}
 		break;
@@ -503,6 +510,7 @@ void Scene1::Update(double dt)
 	{
 		ShootingBullet -= dt;
 	}
+
 	if (shot && ShootingBullet <= 0.f)
 	{
 		ShootingBullet = 5.f;
@@ -511,7 +519,7 @@ void Scene1::Update(double dt)
 	if (ksDist < 1000)
 	{
 		if (KSHP > 0)
-			KSHP -= 1;
+			KSHP -= 2;
 		shot = false;
 	}
 	fps = (float)(1.f / dt);
@@ -555,7 +563,7 @@ void Scene1::UpdateFSM(double dt)
 	}
 
 	float combineSRadSquare = (castleScale.x + 20) * (castleScale.y + 20);
-	if (distance < 1000000 && castlenguards->GetState() == Castle::OPEN && KSHP > 0)
+	if (distance < 140000 && castlenguards->GetState() == Castle::OPEN && KSHP > 0)
 	{
 		castlenguards->SetState(Castle::DEFENCE);
 	}
@@ -621,7 +629,7 @@ void Scene1::RenderFSM()
 	
 
 	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
-		Render2DMeshWScale(meshList[GEO_FIREBALL], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, shoot->GetPosition().x, shoot->GetPosition().y, false);
+		Render2DMeshWScale(meshList[GEO_FIREBALL], false, 15, 15, shoot->GetPosition().x, shoot->GetPosition().y, false);
 
 	if (castlenguards->GetArcher().guardState != Guards::IDLING)
 

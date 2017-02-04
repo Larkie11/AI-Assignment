@@ -286,7 +286,6 @@ void SceneBase::Init()
 		KSAttackDust->m_anim->Set(0, 9, 1, 1, true);
 	}
 
-
 	Math::InitRNG();
 	camera.Init(Vector3(0, 0, 10), Vector3(0, 0, 0), Vector3(0, 1, 0));
 }
