@@ -621,7 +621,7 @@ void Scene1::RenderFSM()
 	
 
 	if (castlenguards->GetArcher().guardState == Guards::ATTACKING)
-		Render2DMeshWScale(meshList[GEO_APPLES], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, shoot->GetPosition().x, shoot->GetPosition().y, false);
+		Render2DMeshWScale(meshList[GEO_FIREBALL], false, castlenguards->GetArcher().scale.x, castlenguards->GetArcher().scale.y, shoot->GetPosition().x, shoot->GetPosition().y, false);
 
 	if (castlenguards->GetArcher().guardState != Guards::IDLING)
 

@@ -282,11 +282,8 @@ void SceneBase::Init()
 	SpriteAnimation *KSAttackDust = dynamic_cast<SpriteAnimation*>(meshList[GEO_KSATTACKFORCE]);
 	if (KSAttackDust)
 	{
-		//if (ksATTACK->m_currentFrame == 2)
-		//{
-			KSAttackDust->m_anim = new Animation();
-			KSAttackDust->m_anim->Set(0, 9, 1, 1, true);
-		//}
+		KSAttackDust->m_anim = new Animation();
+		KSAttackDust->m_anim->Set(0, 9, 1, 1, true);
 	}
 
 
